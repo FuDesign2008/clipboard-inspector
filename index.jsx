@@ -49,11 +49,18 @@ async function extractData(data) {
 				data: data.getData(type)
 			})),
 			items: data.items
-				? Array.from(data.items).map(item => ({
-						kind: item.kind,
-						type: item.type,
-						as_file: file_info(item.getAsFile())
-				  }))
+				? await Promise.all(
+						Array.from(data.items).map(async item => ({
+							kind: item.kind,
+							type: item.type,
+							as_string_or_file:
+								item.kind === 'string'
+									? await new Promise(r =>
+											item.getAsString(r)
+									  )
+									: file_info(item.getAsFile())
+						}))
+				  )
 				: null,
 			files: data.files ? Array.from(data.files).map(file_info) : null
 		};
@@ -67,7 +74,7 @@ async function extractData(data) {
 					const blob = await data.getType(type);
 					return {
 						type: type,
-						data: blob.type.match(/^text\//)
+						data: blob.type.match(/(^text\/)|(image\/svg\+xml$)/)
 							? await blob.text()
 							: file_info(blob)
 					};
@@ -288,6 +295,13 @@ function ClipboardInspector(props) {
 												<th>
 													<a
 														className="mdn"
+														href={`${MDN_BASE}/DataTransferItem/getAsString`}
+													>
+														getAsString()
+													</a>{' '}
+													{' / '}
+													<a
+														className="mdn"
 														href={`${MDN_BASE}/DataTransferItem/getAsFile`}
 													>
 														getAsFile()
@@ -310,8 +324,22 @@ function ClipboardInspector(props) {
 															</code>
 														</td>
 														<td>
-															{render_file(
-																item.as_file
+															{item.kind ===
+															'string' ? (
+																<pre class="cb-entry">
+																	<code>
+																		{item.as_string_or_file || (
+																			<em>
+																				Empty
+																				string
+																			</em>
+																		)}
+																	</code>
+																</pre>
+															) : (
+																render_file(
+																	item.as_string_or_file
+																)
 															)}
 														</td>
 													</tr>

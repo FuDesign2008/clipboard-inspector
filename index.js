@@ -10277,11 +10277,18 @@
 					data: data.getData(type)
 				})),
 				items: data.items
-					? Array.from(data.items).map(item => ({
-							kind: item.kind,
-							type: item.type,
-							as_file: file_info(item.getAsFile())
-					  }))
+					? await Promise.all(
+							Array.from(data.items).map(async item => ({
+								kind: item.kind,
+								type: item.type,
+								as_string_or_file:
+									item.kind === 'string'
+										? await new Promise(r =>
+												item.getAsString(r)
+										  )
+										: file_info(item.getAsFile())
+							}))
+					  )
 					: null,
 				files: data.files ? Array.from(data.files).map(file_info) : null
 			};
@@ -10294,7 +10301,9 @@
 						const blob = await data.getType(type);
 						return {
 							type,
-							data: blob.type.match(/^text\//)
+							data: blob.type.match(
+								/(^text\/)|(image\/svg\+xml$)/
+							)
 								? await blob.text()
 								: file_info(blob)
 						};
@@ -10668,6 +10677,16 @@
 														'a',
 														{
 															className: 'mdn',
+															href: `${MDN_BASE}/DataTransferItem/getAsString`
+														},
+														'getAsString()'
+													),
+													' ',
+													' / ',
+													/* @__PURE__ */ import_react.default.createElement(
+														'a',
+														{
+															className: 'mdn',
 															href: `${MDN_BASE}/DataTransferItem/getAsFile`
 														},
 														'getAsFile()'
@@ -10704,9 +10723,27 @@
 														/* @__PURE__ */ import_react.default.createElement(
 															'td',
 															null,
-															render_file(
-																item.as_file
-															)
+															item.kind ===
+																'string'
+																? /* @__PURE__ */ import_react.default.createElement(
+																		'pre',
+																		{
+																			class: 'cb-entry'
+																		},
+																		/* @__PURE__ */ import_react.default.createElement(
+																			'code',
+																			null,
+																			item.as_string_or_file ||
+																				/* @__PURE__ */ import_react.default.createElement(
+																					'em',
+																					null,
+																					'Empty string'
+																				)
+																		)
+																  )
+																: render_file(
+																		item.as_string_or_file
+																  )
 														)
 													)
 											)
