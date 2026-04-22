@@ -55,7 +55,7 @@ function generateReadme(data: ClipboardEntry[], label: string | undefined) {
 =====================
 
 Export Date: ${timestamp}
-Source: ${label || 'clipboard'}
+Source: ${label ?? 'clipboard'}
 Entries: ${data.length}
 
 This archive contains clipboard content exported from the Clipboard Inspector tool.
@@ -77,20 +77,18 @@ For support inquiries, please send this entire ZIP file.
 }
 
 function generateMetadata(data: ClipboardEntry[], label: string | undefined) {
-	const typesCount = data
-		.map(d => d.types?.length ?? 0)
-		.reduce((a, b) => a + b, 0);
+	const typesCount = data.map(d => d.types.length).reduce((a, b) => a + b, 0);
 	const itemsCount = data
-		.map(d => ('items' in d && d.items ? d.items.length : 0))
+		.map(d => (d.type === 'DataTransfer' ? d.items.length : 0))
 		.reduce((a, b) => a + b, 0);
 	const filesCount = data
-		.map(d => ('files' in d && d.files ? d.files.length : 0))
+		.map(d => (d.type === 'DataTransfer' ? d.files.length : 0))
 		.reduce((a, b) => a + b, 0);
 
 	return {
 		version: '1.0',
 		timestamp: new Date().toISOString(),
-		source: label || 'clipboard',
+		source: label ?? 'clipboard',
 		summary: {
 			totalTypes: typesCount,
 			totalItems: itemsCount,
@@ -100,9 +98,9 @@ function generateMetadata(data: ClipboardEntry[], label: string | undefined) {
 		entries: data.map((entry, index) => ({
 			index,
 			kind: entry.type,
-			typeCount: entry.types?.length ?? 0,
-			itemCount: 'items' in entry && entry.items ? entry.items.length : 0,
-			fileCount: 'files' in entry && entry.files ? entry.files.length : 0
+			typeCount: entry.types.length,
+			itemCount: entry.type === 'DataTransfer' ? entry.items.length : 0,
+			fileCount: entry.type === 'DataTransfer' ? entry.files.length : 0
 		})),
 		note: 'All clipboard content included: text data and binary files (images, PDFs, etc.)'
 	};
@@ -120,7 +118,7 @@ async function addTypesToZip(
 		if (typeof obj.data === 'string') {
 			const filename = sanitizeFilename(obj.type) + '.txt';
 			typesFolder.file(filename, obj.data || '(Empty string)');
-		} else if (obj.data && obj.data.url) {
+		} else if (obj.data?.url) {
 			const blob = await fetchBlobFromObjectURL(obj.data.url);
 			if (blob) {
 				const ext = getFileExtension(obj.type);
@@ -221,7 +219,7 @@ async function addFilesToZip(
 
 	for (let index = 0; index < filesData.length; index++) {
 		const file = filesData[index];
-		if (!file || !file.url) continue;
+		if (!file?.url) continue;
 
 		const blob = await fetchBlobFromObjectURL(file.url);
 		if (blob) {
@@ -288,10 +286,8 @@ export async function downloadAsZip(
 		if (!subFolder) continue;
 
 		await addTypesToZip(subFolder, entry.types);
-		if ('items' in entry) {
+		if (entry.type === 'DataTransfer') {
 			await addItemsToZip(subFolder, entry.items);
-		}
-		if ('files' in entry) {
 			await addFilesToZip(subFolder, entry.files);
 		}
 	}

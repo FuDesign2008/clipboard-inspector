@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot, type Root } from 'react-dom/client';
 import { ClipboardInspector } from './ClipboardInspector';
 import { extractData } from './extract-data';
 import type { ClipboardEntry } from './types';
@@ -9,15 +9,17 @@ if (!app_el) {
 	throw new Error('Missing #app root element in index.html');
 }
 
+const root: Root = createRoot(app_el);
+
 type RenderInput =
 	| DataTransfer
 	| ClipboardItem
-	| Array<DataTransfer | ClipboardItem>
+	| (DataTransfer | ClipboardItem)[]
 	| null
 	| undefined;
 
 async function render(data?: RenderInput, label?: string): Promise<void> {
-	const list: Array<DataTransfer | ClipboardItem> = data
+	const list: (DataTransfer | ClipboardItem)[] = data
 		? Array.isArray(data)
 			? data
 			: [data]
@@ -28,7 +30,7 @@ async function render(data?: RenderInput, label?: string): Promise<void> {
 		(entry): entry is ClipboardEntry => Boolean(entry)
 	);
 
-	ReactDOM.render(
+	root.render(
 		<ClipboardInspector
 			data={extracted_data}
 			label={label}
@@ -36,12 +38,16 @@ async function render(data?: RenderInput, label?: string): Promise<void> {
 				void render();
 			}}
 			onPasteFromClipboard={() => {
-				navigator.clipboard.read().then(items => {
-					void render(items, 'ClipboardItems');
-				});
+				navigator.clipboard
+					.read()
+					.then(items => {
+						void render(items, 'ClipboardItems');
+					})
+					.catch((error: unknown) => {
+						console.error('Clipboard read failed:', error);
+					});
 			}}
-		/>,
-		app_el
+		/>
 	);
 }
 

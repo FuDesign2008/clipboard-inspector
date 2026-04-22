@@ -13,19 +13,17 @@ function formatBytes(n: number | undefined | null): string {
 }
 
 function escapeTableCell(str: string | undefined | null): string {
-	return String(str ?? '')
-		.replace(/\|/g, '\\|')
-		.replace(/\n/g, ' ');
+	return (str ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 }
 
 function renderFencedBlock(lang: string, content: string): string {
-	const body = content ?? '';
-	const longestFence = (body.match(/`{3,}/g) ?? []).reduce(
-		(max, run) => Math.max(max, run.length),
+	const fenceMatches = [...content.matchAll(/`{3,}/g)];
+	const longestFence = fenceMatches.reduce(
+		(max, [run]) => Math.max(max, run.length),
 		2
 	);
 	const fence = '`'.repeat(longestFence + 1);
-	return `${fence}${lang || ''}\n${body}\n${fence}`;
+	return `${fence}${lang}\n${content}\n${fence}`;
 }
 
 function describeFile(file: FileInfo | null): string {
@@ -158,11 +156,9 @@ function renderEntry(entry: ClipboardEntry, index: number): string {
 	lines.push('');
 	const typesSection = renderTypesSection(entry.types);
 	if (typesSection) lines.push(typesSection);
-	if ('items' in entry) {
+	if (entry.type === 'DataTransfer') {
 		const itemsSection = renderItemsSection(entry.items);
 		if (itemsSection) lines.push(itemsSection);
-	}
-	if ('files' in entry) {
 		const filesSection = renderFilesSection(entry.files);
 		if (filesSection) lines.push(filesSection);
 	}
@@ -174,21 +170,19 @@ export function buildMarkdown(
 	label: string | undefined
 ): string {
 	const timestamp = new Date().toISOString();
-	const typesCount = data
-		.map(d => d.types?.length ?? 0)
-		.reduce((a, b) => a + b, 0);
+	const typesCount = data.map(d => d.types.length).reduce((a, b) => a + b, 0);
 	const itemsCount = data
-		.map(d => ('items' in d && d.items ? d.items.length : 0))
+		.map(d => (d.type === 'DataTransfer' ? d.items.length : 0))
 		.reduce((a, b) => a + b, 0);
 	const filesCount = data
-		.map(d => ('files' in d && d.files ? d.files.length : 0))
+		.map(d => (d.type === 'DataTransfer' ? d.files.length : 0))
 		.reduce((a, b) => a + b, 0);
 
 	const header = [
 		'# Clipboard Data Export',
 		'',
 		`- **Export date**: ${timestamp}`,
-		`- **Source**: \`${label || 'clipboard'}\``,
+		`- **Source**: \`${label ?? 'clipboard'}\``,
 		`- **Entries**: ${data.length}`,
 		`- **Total types / items / files**: ${typesCount} / ${itemsCount} / ${filesCount}`,
 		'',
