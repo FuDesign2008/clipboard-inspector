@@ -1,20 +1,38 @@
 import React, { useCallback, useState } from 'react';
-import { MDN_BASE, MDN_URLS } from './mdn-urls.js';
-import { downloadAsZip } from './download/zip.js';
-import { downloadAsMarkdown } from './download/markdown.js';
+import { MDN_BASE, MDN_URLS } from './mdn-urls';
+import { downloadAsZip } from './download/zip';
+import { downloadAsMarkdown } from './download/markdown';
+import type {
+	ClipboardEntry,
+	DownloadState,
+	FileInfo,
+	TypeEntry
+} from './types';
 
-export function ClipboardInspector(props) {
-	const { data, label, onReset, onPasteFromClipboard } = props;
+export type ClipboardInspectorProps = {
+	data: ClipboardEntry[];
+	label: string | undefined;
+	onReset: () => void;
+	onPasteFromClipboard: () => void;
+};
+
+export function ClipboardInspector({
+	data,
+	label,
+	onReset,
+	onPasteFromClipboard
+}: ClipboardInspectorProps): React.ReactElement {
 	const has_async_clipboard =
 		!navigator.clipboard || !navigator.clipboard.read;
 
-	const [zipState, setZipState] = useState('idle');
-	const [mdState, setMdState] = useState('idle');
+	const [zipState, setZipState] = useState<DownloadState>('idle');
+	const [mdState, setMdState] = useState<DownloadState>('idle');
 
-	const autoselect = useCallback(e => {
+	const autoselect = useCallback((e: React.FocusEvent<HTMLSpanElement>) => {
 		const range = document.createRange();
-		range.selectNodeContents(e.target);
+		range.selectNodeContents(e.currentTarget);
 		const selection = window.getSelection();
+		if (!selection) return;
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}, []);
@@ -24,10 +42,12 @@ export function ClipboardInspector(props) {
 		try {
 			await downloadAsZip(data, label);
 			setZipState('success');
-			setTimeout(() => setZipState('idle'), 2000);
-		} catch (error) {
+			window.setTimeout(() => setZipState('idle'), 2000);
+		} catch (error: unknown) {
 			console.error('Failed to generate ZIP:', error);
-			alert('Failed to generate ZIP file. See console for details.');
+			window.alert(
+				'Failed to generate ZIP file. See console for details.'
+			);
 			setZipState('idle');
 		}
 	}, [data, label]);
@@ -37,16 +57,19 @@ export function ClipboardInspector(props) {
 		try {
 			downloadAsMarkdown(data, label);
 			setMdState('success');
-			setTimeout(() => setMdState('idle'), 2000);
-		} catch (error) {
+			window.setTimeout(() => setMdState('idle'), 2000);
+		} catch (error: unknown) {
 			console.error('Failed to generate Markdown:', error);
-			alert('Failed to generate Markdown file. See console for details.');
+			window.alert(
+				'Failed to generate Markdown file. See console for details.'
+			);
 			setMdState('idle');
 		}
 	}, [data, label]);
 
-	function render_file(file) {
-		return file ? (
+	function render_file(file: FileInfo | null): React.ReactNode {
+		if (!file) return <em>N/A</em>;
+		return (
 			<table>
 				<thead>
 					<tr>
@@ -77,16 +100,21 @@ export function ClipboardInspector(props) {
 						<td>
 							<code>
 								<a href={file.url}>
-									<img src={file.url} />
+									<img src={file.url} alt={file.name} />
 								</a>
 							</code>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-		) : (
-			<em>N/A</em>
 		);
+	}
+
+	function render_type_cell(obj: TypeEntry): React.ReactNode {
+		if (typeof obj.data === 'string') {
+			return obj.data || <em>Empty string</em>;
+		}
+		return render_file(obj.data);
 	}
 
 	if (!data.length) {
@@ -152,6 +180,7 @@ export function ClipboardInspector(props) {
 			</div>
 			{data.map((render_data, idx) => {
 				const URLS = MDN_URLS[render_data.type];
+				if (!URLS) return null;
 				return (
 					<div className="clipboard-summary" key={idx}>
 						<h2>
@@ -193,8 +222,8 @@ export function ClipboardInspector(props) {
 										</tr>
 									</thead>
 									<tbody>
-										{render_data.types.map((obj, idx) => (
-											<tr key={idx}>
+										{render_data.types.map((obj, tIdx) => (
+											<tr key={tIdx}>
 												<td>
 													<code>{obj.type}</code>
 													{obj.type.match(
@@ -205,9 +234,12 @@ export function ClipboardInspector(props) {
 															.writeText && (
 															<div className="cb-copy">
 																<button
-																	onClick={e =>
+																	onClick={() =>
 																		navigator.clipboard.writeText(
-																			obj.data
+																			typeof obj.data ===
+																				'string'
+																				? obj.data
+																				: ''
 																		)
 																	}
 																>
@@ -220,17 +252,9 @@ export function ClipboardInspector(props) {
 												<td>
 													<pre className="cb-entry">
 														<code>
-															{typeof obj.data ===
-															'object'
-																? render_file(
-																		obj.data
-																  )
-																: obj.data || (
-																		<em>
-																			Empty
-																			string
-																		</em>
-																  )}
+															{render_type_cell(
+																obj
+															)}
 														</code>
 													</pre>
 												</td>
@@ -241,7 +265,7 @@ export function ClipboardInspector(props) {
 							</div>
 						)}
 
-						{render_data.items && (
+						{'items' in render_data && render_data.items && (
 							<div className="clipboard-section">
 								<h3>
 									<a
@@ -251,80 +275,75 @@ export function ClipboardInspector(props) {
 										.items
 									</a>
 									<span className="anno">
-										{render_data.items ? (
-											`${render_data.items.length} item(s) available`
-										) : (
-											<em>Undefined</em>
-										)}
+										{`${render_data.items.length} item(s) available`}
 									</span>
 								</h3>
 
-								{render_data.items ? (
-									<table>
-										<thead>
-											<tr>
-												<th>kind</th>
-												<th>type</th>
-												<th>
-													<a
-														className="mdn"
-														href={`${MDN_BASE}/DataTransferItem/getAsString`}
-													>
-														getAsString()
-													</a>{' '}
-													{' / '}
-													<a
-														className="mdn"
-														href={`${MDN_BASE}/DataTransferItem/getAsFile`}
-													>
-														getAsFile()
-													</a>
-												</th>
+								<table>
+									<thead>
+										<tr>
+											<th>kind</th>
+											<th>type</th>
+											<th>
+												<a
+													className="mdn"
+													href={`${MDN_BASE}/DataTransferItem/getAsString`}
+												>
+													getAsString()
+												</a>{' '}
+												{' / '}
+												<a
+													className="mdn"
+													href={`${MDN_BASE}/DataTransferItem/getAsFile`}
+												>
+													getAsFile()
+												</a>
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										{render_data.items.map((item, iIdx) => (
+											<tr key={iIdx}>
+												<td>
+													<code>{item.kind}</code>
+												</td>
+												<td>
+													<code>{item.type}</code>
+												</td>
+												<td>
+													{item.kind === 'string' ? (
+														<pre className="cb-entry">
+															<code>
+																{typeof item.as_string_or_file ===
+																'string' ? (
+																	item.as_string_or_file || (
+																		<em>
+																			Empty
+																			string
+																		</em>
+																	)
+																) : (
+																	<em>N/A</em>
+																)}
+															</code>
+														</pre>
+													) : (
+														render_file(
+															typeof item.as_string_or_file ===
+																'string'
+																? null
+																: item.as_string_or_file
+														)
+													)}
+												</td>
 											</tr>
-										</thead>
-										<tbody>
-											{render_data.items.map(
-												(item, idx) => (
-													<tr key={idx}>
-														<td>
-															<code>
-																{item.kind}
-															</code>
-														</td>
-														<td>
-															<code>
-																{item.type}
-															</code>
-														</td>
-														<td>
-															{item.kind ===
-															'string' ? (
-																<pre className="cb-entry">
-																	<code>
-																		{item.as_string_or_file || (
-																			<em>
-																				Empty
-																				string
-																			</em>
-																		)}
-																	</code>
-																</pre>
-															) : (
-																render_file(
-																	item.as_string_or_file
-																)
-															)}
-														</td>
-													</tr>
-												)
-											)}
-										</tbody>
-									</table>
-								) : null}
+										))}
+									</tbody>
+								</table>
 							</div>
 						)}
 
-						{render_data.files && (
+						{'files' in render_data && render_data.files && (
 							<div className="clipboard-section">
 								<h3>
 									<a
@@ -334,18 +353,12 @@ export function ClipboardInspector(props) {
 										.files
 									</a>
 									<span className="anno">
-										{render_data.files
-											? `${render_data.files.length} file(s) available`
-											: '<em>Undefined</em>'}
+										{`${render_data.files.length} file(s) available`}
 									</span>
 								</h3>
-								{render_data.files ? (
-									render_data.files.map((file, idx) => (
-										<div key={idx}>{render_file(file)}</div>
-									))
-								) : (
-									<span>N/A</span>
-								)}
+								{render_data.files.map((file, fIdx) => (
+									<div key={fIdx}>{render_file(file)}</div>
+								))}
 							</div>
 						)}
 					</div>

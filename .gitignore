@@ -63,3 +63,6 @@ typings/
 # Parcel stuff
 dist
 .cache
+
+# TypeScript incremental build info
+*.tsbuildinfo

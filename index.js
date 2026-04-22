@@ -1,4 +1,5 @@
 // This file is auto-generated from src/, do not edit directly.
+'use strict';
 (() => {
 	var __create = Object.create;
 	var __defProp = Object.defineProperty;
@@ -19678,20 +19679,20 @@
 		}
 	});
 
-	// src/index.jsx
+	// src/index.tsx
 	var import_react2 = __toESM(require_react());
 	var import_react_dom = __toESM(require_react_dom());
 
-	// src/ClipboardInspector.jsx
+	// src/ClipboardInspector.tsx
 	var import_react = __toESM(require_react());
 
-	// src/mdn-urls.js
+	// src/mdn-urls.ts
 	var MDN_BASE = `https://developer.mozilla.org/en-US/docs/Web/API`;
 	var MDN_URLS = {
 		DataTransfer: {
 			ctr: {
 				url: 'DataTransfer',
-				label: label => `event.${label}`
+				label: label => `event.${label ?? 'data'}`
 			},
 			getData: {
 				url: 'DataTransfer/getData',
@@ -19710,10 +19711,10 @@
 		}
 	};
 
-	// src/download/zip.js
+	// src/download/zip.ts
 	var import_jszip = __toESM(require_jszip_min());
 
-	// src/download/utils.js
+	// src/download/utils.ts
 	function sanitizeFilename(str) {
 		if (!str) return 'unknown';
 		return str
@@ -19744,7 +19745,8 @@
 		'application/javascript': '.js'
 	};
 	function getFileExtension(mimeType, defaultExt = '.bin') {
-		return MIME_TO_EXT[mimeType] || defaultExt;
+		if (!mimeType) return defaultExt;
+		return MIME_TO_EXT[mimeType] ?? defaultExt;
 	}
 	async function fetchBlobFromObjectURL(url) {
 		try {
@@ -19770,7 +19772,7 @@
 		const blob =
 			typeof blobOrString === 'string'
 				? new Blob([blobOrString], {
-						type: mimeType || 'text/plain;charset=utf-8'
+						type: mimeType ?? 'text/plain;charset=utf-8'
 				  })
 				: blobOrString;
 		const a = document.createElement('a');
@@ -19779,7 +19781,7 @@
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-		setTimeout(() => URL.revokeObjectURL(a.href), 0);
+		window.setTimeout(() => URL.revokeObjectURL(a.href), 0);
 	}
 	function mimeToMarkdownLang(mimeType) {
 		if (!mimeType) return '';
@@ -19797,7 +19799,7 @@
 		return '';
 	}
 
-	// src/download/zip.js
+	// src/download/zip.ts
 	function generateReadme(data, label) {
 		const timestamp = /* @__PURE__ */ new Date().toISOString();
 		return `Clipboard Data Export
@@ -19805,6 +19807,7 @@
 
 Export Date: ${timestamp}
 Source: ${label || 'clipboard'}
+Entries: ${data.length}
 
 This archive contains clipboard content exported from the Clipboard Inspector tool.
 
@@ -19825,13 +19828,13 @@ For support inquiries, please send this entire ZIP file.
 	}
 	function generateMetadata(data, label) {
 		const typesCount = data
-			.map(d => d.types?.length || 0)
+			.map(d => d.types?.length ?? 0)
 			.reduce((a, b) => a + b, 0);
 		const itemsCount = data
-			.map(d => d.items?.length || 0)
+			.map(d => ('items' in d && d.items ? d.items.length : 0))
 			.reduce((a, b) => a + b, 0);
 		const filesCount = data
-			.map(d => d.files?.length || 0)
+			.map(d => ('files' in d && d.files ? d.files.length : 0))
 			.reduce((a, b) => a + b, 0);
 		return {
 			version: '1.0',
@@ -19846,9 +19849,11 @@ For support inquiries, please send this entire ZIP file.
 			entries: data.map((entry, index) => ({
 				index,
 				kind: entry.type,
-				typeCount: entry.types?.length || 0,
-				itemCount: entry.items?.length || 0,
-				fileCount: entry.files?.length || 0
+				typeCount: entry.types?.length ?? 0,
+				itemCount:
+					'items' in entry && entry.items ? entry.items.length : 0,
+				fileCount:
+					'files' in entry && entry.files ? entry.files.length : 0
 			})),
 			note: 'All clipboard content included: text data and binary files (images, PDFs, etc.)'
 		};
@@ -19856,20 +19861,18 @@ For support inquiries, please send this entire ZIP file.
 	async function addTypesToZip(folder, typesData) {
 		if (!typesData || typesData.length === 0) return;
 		const typesFolder = folder.folder('types');
+		if (!typesFolder) return;
 		for (const obj of typesData) {
 			if (typeof obj.data === 'string') {
 				const filename = sanitizeFilename(obj.type) + '.txt';
 				typesFolder.file(filename, obj.data || '(Empty string)');
-			} else if (typeof obj.data === 'object' && obj.data !== null) {
-				if (obj.data.url) {
-					const blob = await fetchBlobFromObjectURL(obj.data.url);
-					if (blob) {
-						const ext = getFileExtension(obj.type);
-						const filename =
-							obj.data.name ||
-							`${sanitizeFilename(obj.type)}${ext}`;
-						typesFolder.file(filename, blob);
-					}
+			} else if (obj.data && obj.data.url) {
+				const blob = await fetchBlobFromObjectURL(obj.data.url);
+				if (blob) {
+					const ext = getFileExtension(obj.type);
+					const filename =
+						obj.data.name || `${sanitizeFilename(obj.type)}${ext}`;
+					typesFolder.file(filename, blob);
 				}
 			}
 		}
@@ -19877,9 +19880,11 @@ For support inquiries, please send this entire ZIP file.
 	async function addItemsToZip(folder, itemsData) {
 		if (!itemsData || itemsData.length === 0) return;
 		const itemsFolder = folder.folder('items');
+		if (!itemsFolder) return;
 		const manifest = [];
 		for (let index = 0; index < itemsData.length; index++) {
 			const item = itemsData[index];
+			if (!item) continue;
 			if (
 				item.kind === 'string' &&
 				typeof item.as_string_or_file === 'string'
@@ -19950,6 +19955,7 @@ For support inquiries, please send this entire ZIP file.
 	async function addFilesToZip(folder, filesData) {
 		if (!filesData || filesData.length === 0) return;
 		const filesFolder = folder.folder('files');
+		if (!filesFolder) return;
 		const manifest = [];
 		const usedFilenames = /* @__PURE__ */ new Set();
 		for (let index = 0; index < filesData.length; index++) {
@@ -19957,18 +19963,18 @@ For support inquiries, please send this entire ZIP file.
 			if (!file || !file.url) continue;
 			const blob = await fetchBlobFromObjectURL(file.url);
 			if (blob) {
-				let filename =
+				const base =
 					file.name || `file-${index}${getFileExtension(file.type)}`;
-				let finalFilename = filename;
+				let finalFilename = base;
 				let counter = 1;
 				while (usedFilenames.has(finalFilename)) {
-					const lastDot = filename.lastIndexOf('.');
+					const lastDot = base.lastIndexOf('.');
 					if (lastDot > 0) {
-						const name = filename.substring(0, lastDot);
-						const ext = filename.substring(lastDot);
+						const name = base.substring(0, lastDot);
+						const ext = base.substring(lastDot);
 						finalFilename = `${name}-${counter}${ext}`;
 					} else {
-						finalFilename = `${filename}-${counter}`;
+						finalFilename = `${base}-${counter}`;
 					}
 					counter++;
 				}
@@ -20007,16 +20013,16 @@ For support inquiries, please send this entire ZIP file.
 			JSON.stringify(generateMetadata(data, label), null, 2)
 		);
 		for (let i = 0; i < data.length; i++) {
-			const item = data[i];
+			const entry = data[i];
+			if (!entry) continue;
 			const subFolder = zip.folder(`data-${i}`);
-			if (item.types) {
-				await addTypesToZip(subFolder, item.types);
+			if (!subFolder) continue;
+			await addTypesToZip(subFolder, entry.types);
+			if ('items' in entry) {
+				await addItemsToZip(subFolder, entry.items);
 			}
-			if (item.items) {
-				await addItemsToZip(subFolder, item.items);
-			}
-			if (item.files) {
-				await addFilesToZip(subFolder, item.files);
+			if ('files' in entry) {
+				await addFilesToZip(subFolder, entry.files);
 			}
 		}
 		const blob = await zip.generateAsync({ type: 'blob' });
@@ -20024,7 +20030,7 @@ For support inquiries, please send this entire ZIP file.
 		triggerBrowserDownload(blob, filename, 'application/zip');
 	}
 
-	// src/download/markdown.js
+	// src/download/markdown.ts
 	function formatBytes(n) {
 		if (typeof n !== 'number' || !Number.isFinite(n)) return 'unknown';
 		if (n < 1024) return `${n} B`;
@@ -20032,11 +20038,13 @@ For support inquiries, please send this entire ZIP file.
 		return `${(n / 1024 / 1024).toFixed(2)} MB`;
 	}
 	function escapeTableCell(str) {
-		return String(str).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+		return String(str ?? '')
+			.replace(/\|/g, '\\|')
+			.replace(/\n/g, ' ');
 	}
 	function renderFencedBlock(lang, content) {
-		const body = content == null ? '' : String(content);
-		const longestFence = (body.match(/`{3,}/g) || []).reduce(
+		const body = content ?? '';
+		const longestFence = (body.match(/`{3,}/g) ?? []).reduce(
 			(max, run) => Math.max(max, run.length),
 			2
 		);
@@ -20047,13 +20055,11 @@ ${fence}`;
 	}
 	function describeFile(file) {
 		if (!file) return '`N/A`';
-		const parts = [
-			file.name ? `name: \`${file.name}\`` : null,
-			file.type ? `type: \`${file.type}\`` : null,
-			typeof file.size === 'number'
-				? `size: ${formatBytes(file.size)}`
-				: null
-		].filter(Boolean);
+		const parts = [];
+		if (file.name) parts.push(`name: \`${file.name}\``);
+		if (file.type) parts.push(`type: \`${file.type}\``);
+		if (typeof file.size === 'number')
+			parts.push(`size: ${formatBytes(file.size)}`);
 		return parts.length > 0 ? parts.join(', ') : '`(empty file info)`';
 	}
 	function renderTypesSection(typesData) {
@@ -20077,7 +20083,7 @@ ${fence}`;
 					const lang = mimeToMarkdownLang(obj.type);
 					lines.push(renderFencedBlock(lang, obj.data));
 				}
-			} else if (typeof obj.data === 'object' && obj.data !== null) {
+			} else if (obj.data) {
 				lines.push(`**Binary file**: ${describeFile(obj.data)}`);
 			} else {
 				lines.push('_N/A_');
@@ -20165,22 +20171,26 @@ ${fence}`;
 		lines.push('');
 		const typesSection = renderTypesSection(entry.types);
 		if (typesSection) lines.push(typesSection);
-		const itemsSection = renderItemsSection(entry.items);
-		if (itemsSection) lines.push(itemsSection);
-		const filesSection = renderFilesSection(entry.files);
-		if (filesSection) lines.push(filesSection);
+		if ('items' in entry) {
+			const itemsSection = renderItemsSection(entry.items);
+			if (itemsSection) lines.push(itemsSection);
+		}
+		if ('files' in entry) {
+			const filesSection = renderFilesSection(entry.files);
+			if (filesSection) lines.push(filesSection);
+		}
 		return lines.join('\n');
 	}
 	function buildMarkdown(data, label) {
 		const timestamp = /* @__PURE__ */ new Date().toISOString();
 		const typesCount = data
-			.map(d => d.types?.length || 0)
+			.map(d => d.types?.length ?? 0)
 			.reduce((a, b) => a + b, 0);
 		const itemsCount = data
-			.map(d => d.items?.length || 0)
+			.map(d => ('items' in d && d.items ? d.items.length : 0))
 			.reduce((a, b) => a + b, 0);
 		const filesCount = data
-			.map(d => d.files?.length || 0)
+			.map(d => ('files' in d && d.files ? d.files.length : 0))
 			.reduce((a, b) => a + b, 0);
 		const header = [
 			'# Clipboard Data Export',
@@ -20210,17 +20220,22 @@ ${fence}`;
 		);
 	}
 
-	// src/ClipboardInspector.jsx
-	function ClipboardInspector(props) {
-		const { data, label, onReset, onPasteFromClipboard } = props;
+	// src/ClipboardInspector.tsx
+	function ClipboardInspector({
+		data,
+		label,
+		onReset,
+		onPasteFromClipboard
+	}) {
 		const has_async_clipboard =
 			!navigator.clipboard || !navigator.clipboard.read;
 		const [zipState, setZipState] = (0, import_react.useState)('idle');
 		const [mdState, setMdState] = (0, import_react.useState)('idle');
 		const autoselect = (0, import_react.useCallback)(e => {
 			const range = document.createRange();
-			range.selectNodeContents(e.target);
+			range.selectNodeContents(e.currentTarget);
 			const selection = window.getSelection();
+			if (!selection) return;
 			selection.removeAllRanges();
 			selection.addRange(range);
 		}, []);
@@ -20229,10 +20244,12 @@ ${fence}`;
 			try {
 				await downloadAsZip(data, label);
 				setZipState('success');
-				setTimeout(() => setZipState('idle'), 2e3);
+				window.setTimeout(() => setZipState('idle'), 2e3);
 			} catch (error) {
 				console.error('Failed to generate ZIP:', error);
-				alert('Failed to generate ZIP file. See console for details.');
+				window.alert(
+					'Failed to generate ZIP file. See console for details.'
+				);
 				setZipState('idle');
 			}
 		}, [data, label]);
@@ -20241,112 +20258,125 @@ ${fence}`;
 			try {
 				downloadAsMarkdown(data, label);
 				setMdState('success');
-				setTimeout(() => setMdState('idle'), 2e3);
+				window.setTimeout(() => setMdState('idle'), 2e3);
 			} catch (error) {
 				console.error('Failed to generate Markdown:', error);
-				alert(
+				window.alert(
 					'Failed to generate Markdown file. See console for details.'
 				);
 				setMdState('idle');
 			}
 		}, [data, label]);
 		function render_file(file) {
-			return file
-				? /* @__PURE__ */ import_react.default.createElement(
-						'table',
+			if (!file)
+				return /* @__PURE__ */ import_react.default.createElement(
+					'em',
+					null,
+					'N/A'
+				);
+			return /* @__PURE__ */ import_react.default.createElement(
+				'table',
+				null,
+				/* @__PURE__ */ import_react.default.createElement(
+					'thead',
+					null,
+					/* @__PURE__ */ import_react.default.createElement(
+						'tr',
 						null,
 						/* @__PURE__ */ import_react.default.createElement(
-							'thead',
+							'th',
+							null,
+							'Name'
+						),
+						/* @__PURE__ */ import_react.default.createElement(
+							'th',
+							null,
+							'Size'
+						),
+						/* @__PURE__ */ import_react.default.createElement(
+							'th',
+							null,
+							'Type'
+						),
+						/* @__PURE__ */ import_react.default.createElement(
+							'th',
 							null,
 							/* @__PURE__ */ import_react.default.createElement(
-								'tr',
+								'a',
+								{
+									className: 'mdn',
+									href: `${MDN_BASE}/URL/createObjectURL`
+								},
+								'URL.createObjectURL(file)'
+							)
+						)
+					)
+				),
+				/* @__PURE__ */ import_react.default.createElement(
+					'tbody',
+					null,
+					/* @__PURE__ */ import_react.default.createElement(
+						'tr',
+						null,
+						/* @__PURE__ */ import_react.default.createElement(
+							'td',
+							null,
+							/* @__PURE__ */ import_react.default.createElement(
+								'code',
 								null,
-								/* @__PURE__ */ import_react.default.createElement(
-									'th',
-									null,
-									'Name'
-								),
-								/* @__PURE__ */ import_react.default.createElement(
-									'th',
-									null,
-									'Size'
-								),
-								/* @__PURE__ */ import_react.default.createElement(
-									'th',
-									null,
-									'Type'
-								),
-								/* @__PURE__ */ import_react.default.createElement(
-									'th',
-									null,
-									/* @__PURE__ */ import_react.default.createElement(
-										'a',
-										{
-											className: 'mdn',
-											href: `${MDN_BASE}/URL/createObjectURL`
-										},
-										'URL.createObjectURL(file)'
-									)
-								)
+								file.name
 							)
 						),
 						/* @__PURE__ */ import_react.default.createElement(
-							'tbody',
+							'td',
 							null,
 							/* @__PURE__ */ import_react.default.createElement(
-								'tr',
+								'code',
+								null,
+								file.size
+							)
+						),
+						/* @__PURE__ */ import_react.default.createElement(
+							'td',
+							null,
+							/* @__PURE__ */ import_react.default.createElement(
+								'code',
+								null,
+								file.type
+							)
+						),
+						/* @__PURE__ */ import_react.default.createElement(
+							'td',
+							null,
+							/* @__PURE__ */ import_react.default.createElement(
+								'code',
 								null,
 								/* @__PURE__ */ import_react.default.createElement(
-									'td',
-									null,
+									'a',
+									{ href: file.url },
 									/* @__PURE__ */ import_react.default.createElement(
-										'code',
-										null,
-										file.name
-									)
-								),
-								/* @__PURE__ */ import_react.default.createElement(
-									'td',
-									null,
-									/* @__PURE__ */ import_react.default.createElement(
-										'code',
-										null,
-										file.size
-									)
-								),
-								/* @__PURE__ */ import_react.default.createElement(
-									'td',
-									null,
-									/* @__PURE__ */ import_react.default.createElement(
-										'code',
-										null,
-										file.type
-									)
-								),
-								/* @__PURE__ */ import_react.default.createElement(
-									'td',
-									null,
-									/* @__PURE__ */ import_react.default.createElement(
-										'code',
-										null,
-										/* @__PURE__ */ import_react.default.createElement(
-											'a',
-											{ href: file.url },
-											/* @__PURE__ */ import_react.default.createElement(
-												'img',
-												{ src: file.url }
-											)
-										)
+										'img',
+										{ src: file.url, alt: file.name }
 									)
 								)
 							)
 						)
-				  )
-				: /* @__PURE__ */ import_react.default.createElement(
+					)
+				)
+			);
+		}
+		function render_type_cell(obj) {
+			if (typeof obj.data === 'string') {
+				return (
+					obj.data ||
+					/* @__PURE__ */ import_react.default.createElement(
 						'em',
 						null,
-						'N/A'
-				  );
+						'Empty string'
+					)
+				);
+			}
+			return render_file(obj.data);
 		}
 		if (!data.length) {
 			return /* @__PURE__ */ import_react.default.createElement(
@@ -20452,6 +20482,7 @@ ${fence}`;
 			),
 			data.map((render_data, idx) => {
 				const URLS = MDN_URLS[render_data.type];
+				if (!URLS) return null;
 				return /* @__PURE__ */ import_react.default.createElement(
 					'div',
 					{ className: 'clipboard-summary', key: idx },
@@ -20522,10 +20553,10 @@ ${fence}`;
 								/* @__PURE__ */ import_react.default.createElement(
 									'tbody',
 									null,
-									render_data.types.map((obj, idx2) =>
+									render_data.types.map((obj, tIdx) =>
 										/* @__PURE__ */ import_react.default.createElement(
 											'tr',
-											{ key: idx2 },
+											{ key: tIdx },
 											/* @__PURE__ */ import_react.default.createElement(
 												'td',
 												null,
@@ -20546,9 +20577,12 @@ ${fence}`;
 														/* @__PURE__ */ import_react.default.createElement(
 															'button',
 															{
-																onClick: e =>
+																onClick: () =>
 																	navigator.clipboard.writeText(
-																		obj.data
+																		typeof obj.data ===
+																			'string'
+																			? obj.data
+																			: ''
 																	)
 															},
 															'Copy as plain text'
@@ -20564,17 +20598,7 @@ ${fence}`;
 													/* @__PURE__ */ import_react.default.createElement(
 														'code',
 														null,
-														typeof obj.data ===
-															'object'
-															? render_file(
-																	obj.data
-															  )
-															: obj.data ||
-																	/* @__PURE__ */ import_react.default.createElement(
-																		'em',
-																		null,
-																		'Empty string'
-																	)
+														render_type_cell(obj)
 													)
 												)
 											)
@@ -20583,7 +20607,8 @@ ${fence}`;
 								)
 							)
 						),
-					render_data.items &&
+					'items' in render_data &&
+						render_data.items &&
 						/* @__PURE__ */ import_react.default.createElement(
 							'div',
 							{ className: 'clipboard-section' },
@@ -20601,118 +20626,119 @@ ${fence}`;
 								/* @__PURE__ */ import_react.default.createElement(
 									'span',
 									{ className: 'anno' },
-									render_data.items
-										? `${render_data.items.length} item(s) available`
-										: /* @__PURE__ */ import_react.default.createElement(
-												'em',
-												null,
-												'Undefined'
-										  )
+									`${render_data.items.length} item(s) available`
 								)
 							),
-							render_data.items
-								? /* @__PURE__ */ import_react.default.createElement(
-										'table',
+							/* @__PURE__ */ import_react.default.createElement(
+								'table',
+								null,
+								/* @__PURE__ */ import_react.default.createElement(
+									'thead',
+									null,
+									/* @__PURE__ */ import_react.default.createElement(
+										'tr',
 										null,
 										/* @__PURE__ */ import_react.default.createElement(
-											'thead',
+											'th',
 											null,
-											/* @__PURE__ */ import_react.default.createElement(
-												'tr',
-												null,
-												/* @__PURE__ */ import_react.default.createElement(
-													'th',
-													null,
-													'kind'
-												),
-												/* @__PURE__ */ import_react.default.createElement(
-													'th',
-													null,
-													'type'
-												),
-												/* @__PURE__ */ import_react.default.createElement(
-													'th',
-													null,
-													/* @__PURE__ */ import_react.default.createElement(
-														'a',
-														{
-															className: 'mdn',
-															href: `${MDN_BASE}/DataTransferItem/getAsString`
-														},
-														'getAsString()'
-													),
-													' ',
-													' / ',
-													/* @__PURE__ */ import_react.default.createElement(
-														'a',
-														{
-															className: 'mdn',
-															href: `${MDN_BASE}/DataTransferItem/getAsFile`
-														},
-														'getAsFile()'
-													)
-												)
-											)
+											'kind'
 										),
 										/* @__PURE__ */ import_react.default.createElement(
-											'tbody',
+											'th',
 											null,
-											render_data.items.map(
-												(item, idx2) =>
-													/* @__PURE__ */ import_react.default.createElement(
-														'tr',
-														{ key: idx2 },
-														/* @__PURE__ */ import_react.default.createElement(
-															'td',
-															null,
-															/* @__PURE__ */ import_react.default.createElement(
-																'code',
-																null,
-																item.kind
-															)
-														),
-														/* @__PURE__ */ import_react.default.createElement(
-															'td',
-															null,
-															/* @__PURE__ */ import_react.default.createElement(
-																'code',
-																null,
-																item.type
-															)
-														),
-														/* @__PURE__ */ import_react.default.createElement(
-															'td',
-															null,
-															item.kind ===
-																'string'
-																? /* @__PURE__ */ import_react.default.createElement(
-																		'pre',
-																		{
-																			className:
-																				'cb-entry'
-																		},
-																		/* @__PURE__ */ import_react.default.createElement(
-																			'code',
-																			null,
-																			item.as_string_or_file ||
-																				/* @__PURE__ */ import_react.default.createElement(
-																					'em',
-																					null,
-																					'Empty string'
-																				)
-																		)
-																  )
-																: render_file(
-																		item.as_string_or_file
-																  )
-														)
-													)
+											'type'
+										),
+										/* @__PURE__ */ import_react.default.createElement(
+											'th',
+											null,
+											/* @__PURE__ */ import_react.default.createElement(
+												'a',
+												{
+													className: 'mdn',
+													href: `${MDN_BASE}/DataTransferItem/getAsString`
+												},
+												'getAsString()'
+											),
+											' ',
+											' / ',
+											/* @__PURE__ */ import_react.default.createElement(
+												'a',
+												{
+													className: 'mdn',
+													href: `${MDN_BASE}/DataTransferItem/getAsFile`
+												},
+												'getAsFile()'
 											)
 										)
-								  )
-								: null
+									)
+								),
+								/* @__PURE__ */ import_react.default.createElement(
+									'tbody',
+									null,
+									render_data.items.map((item, iIdx) =>
+										/* @__PURE__ */ import_react.default.createElement(
+											'tr',
+											{ key: iIdx },
+											/* @__PURE__ */ import_react.default.createElement(
+												'td',
+												null,
+												/* @__PURE__ */ import_react.default.createElement(
+													'code',
+													null,
+													item.kind
+												)
+											),
+											/* @__PURE__ */ import_react.default.createElement(
+												'td',
+												null,
+												/* @__PURE__ */ import_react.default.createElement(
+													'code',
+													null,
+													item.type
+												)
+											),
+											/* @__PURE__ */ import_react.default.createElement(
+												'td',
+												null,
+												item.kind === 'string'
+													? /* @__PURE__ */ import_react.default.createElement(
+															'pre',
+															{
+																className:
+																	'cb-entry'
+															},
+															/* @__PURE__ */ import_react.default.createElement(
+																'code',
+																null,
+																typeof item.as_string_or_file ===
+																	'string'
+																	? item.as_string_or_file ||
+																			/* @__PURE__ */ import_react.default.createElement(
+																				'em',
+																				null,
+																				'Empty string'
+																			)
+																	: /* @__PURE__ */ import_react.default.createElement(
+																			'em',
+																			null,
+																			'N/A'
+																	  )
+															)
+													  )
+													: render_file(
+															typeof item.as_string_or_file ===
+																'string'
+																? null
+																: item.as_string_or_file
+													  )
+											)
+										)
+									)
+								)
+							)
 						),
-					render_data.files &&
+					'files' in render_data &&
+						render_data.files &&
 						/* @__PURE__ */ import_react.default.createElement(
 							'div',
 							{ className: 'clipboard-section' },
@@ -20730,107 +20756,108 @@ ${fence}`;
 								/* @__PURE__ */ import_react.default.createElement(
 									'span',
 									{ className: 'anno' },
-									render_data.files
-										? `${render_data.files.length} file(s) available`
-										: '<em>Undefined</em>'
+									`${render_data.files.length} file(s) available`
 								)
 							),
-							render_data.files
-								? render_data.files.map((file, idx2) =>
-										/* @__PURE__ */ import_react.default.createElement(
-											'div',
-											{ key: idx2 },
-											render_file(file)
-										)
-								  )
-								: /* @__PURE__ */ import_react.default.createElement(
-										'span',
-										null,
-										'N/A'
-								  )
+							render_data.files.map((file, fIdx) =>
+								/* @__PURE__ */ import_react.default.createElement(
+									'div',
+									{ key: fIdx },
+									render_file(file)
+								)
+							)
 						)
 				);
 			})
 		);
 	}
 
-	// src/extract-data.js
+	// src/extract-data.ts
+	function file_info(file) {
+		if (!file) return null;
+		const asFile = file;
+		return {
+			name: typeof asFile.name === 'string' ? asFile.name : '',
+			size: file.size,
+			type: file.type,
+			url: URL.createObjectURL(file)
+		};
+	}
 	async function extractData(data) {
 		if (!data) {
 			return void 0;
 		}
-		const file_info = file =>
-			file
-				? {
-						name: file.name,
-						size: file.size,
-						type: file.type,
-						url: URL.createObjectURL(file)
-				  }
-				: null;
 		if (data instanceof DataTransfer) {
+			const types = Array.from(data.types).map(type => ({
+				type,
+				data: data.getData(type)
+			}));
+			const items = data.items
+				? await Promise.all(
+						Array.from(data.items).map(async item => ({
+							kind: item.kind,
+							type: item.type,
+							as_string_or_file:
+								item.kind === 'string'
+									? await new Promise(resolve => {
+											item.getAsString(resolve);
+									  })
+									: file_info(item.getAsFile())
+						}))
+				  )
+				: null;
+			const files = data.files
+				? Array.from(data.files).map(f => file_info(f))
+				: null;
 			return {
 				type: 'DataTransfer',
-				types: Array.from(data.types).map(type => ({
-					type,
-					data: data.getData(type)
-				})),
-				items: data.items
-					? await Promise.all(
-							Array.from(data.items).map(async item => ({
-								kind: item.kind,
-								type: item.type,
-								as_string_or_file:
-									item.kind === 'string'
-										? await new Promise(r =>
-												item.getAsString(r)
-										  )
-										: file_info(item.getAsFile())
-							}))
-					  )
-					: null,
-				files: data.files ? Array.from(data.files).map(file_info) : null
+				types,
+				items,
+				files
 			};
 		}
 		if (data instanceof ClipboardItem) {
+			const types = await Promise.all(
+				Array.from(data.types).map(async type => {
+					const blob = await data.getType(type);
+					const isText = blob.type.match(
+						/(^text\/)|(image\/svg\+xml$)/
+					);
+					return {
+						type,
+						data: isText ? await blob.text() : file_info(blob)
+					};
+				})
+			);
 			return {
 				type: 'ClipboardItem',
-				types: await Promise.all(
-					Array.from(data.types).map(async type => {
-						const blob = await data.getType(type);
-						return {
-							type,
-							data: blob.type.match(
-								/(^text\/)|(image\/svg\+xml$)/
-							)
-								? await blob.text()
-								: file_info(blob)
-						};
-					})
-				)
+				types
 			};
 		}
 		return void 0;
 	}
 
-	// src/index.jsx
+	// src/index.tsx
 	var app_el = document.getElementById('app');
+	if (!app_el) {
+		throw new Error('Missing #app root element in index.html');
+	}
 	async function render(data, label) {
-		const extracted_data = data
-			? await Promise.all(
-					(Array.isArray(data) ? data : [data]).map(extractData)
-			  )
-			: [];
+		const list = data ? (Array.isArray(data) ? data : [data]) : [];
+		const resolved = await Promise.all(list.map(extractData));
+		const extracted_data = resolved.filter(entry => Boolean(entry));
 		import_react_dom.default.render(
 			/* @__PURE__ */ import_react2.default.createElement(
 				ClipboardInspector,
 				{
 					data: extracted_data,
 					label,
-					onReset: () => render(),
+					onReset: () => {
+						void render();
+					},
 					onPasteFromClipboard: () => {
-						navigator.clipboard.read().then(d => {
-							render(d, 'ClipboardItems');
+						navigator.clipboard.read().then(items => {
+							void render(items, 'ClipboardItems');
 						});
 					}
 				}
@@ -20838,15 +20865,15 @@ ${fence}`;
 			app_el
 		);
 	}
-	render();
+	void render();
 	document.addEventListener('paste', e => {
-		render(e.clipboardData, 'clipboardData');
+		void render(e.clipboardData, 'clipboardData');
 	});
 	document.addEventListener('dragover', e => {
 		e.preventDefault();
 	});
 	document.addEventListener('drop', e => {
-		render(e.dataTransfer, 'dataTransfer');
+		void render(e.dataTransfer, 'dataTransfer');
 		e.preventDefault();
 	});
 })();
