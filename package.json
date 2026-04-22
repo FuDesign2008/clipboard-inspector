@@ -13,8 +13,7 @@
 		"test": "vitest",
 		"test:run": "vitest run",
 		"test:watch": "vitest",
-		"build": "npm run typecheck && npm run lint && esbuild src/index.tsx --outfile=index.js --bundle '--define:process.env.NODE_ENV=\"production\"' --banner:js='// This file is auto-generated from src/, do not edit directly.'",
-		"deploy": "npm run build && gh-pages -d . -s \"{index.html,index.js,style.css}\""
+		"build": "npm run typecheck && npm run lint && esbuild src/index.tsx --outfile=index.js --bundle '--define:process.env.NODE_ENV=\"production\"' --banner:js='// This file is auto-generated from src/, do not edit directly.'"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.18.0",
@@ -25,7 +24,6 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-react": "^7.37.4",
 		"eslint-plugin-react-hooks": "^5.1.0",
-		"gh-pages": "^5.0.0",
 		"globals": "^15.14.0",
 		"prettier": "^2.8.3",
 		"pretty-quick": "^3.1.3",

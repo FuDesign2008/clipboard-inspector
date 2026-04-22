@@ -29,14 +29,15 @@ clipboard-inspector/
 │       └── zip.ts              # ZIP export (JSZip)
 ├── tsconfig.json               # TypeScript config (strict, bundler-resolved)
 ├── index.html                  # GitHub Pages entry (loads ./index.js)
-├── index.js                    # Build artifact, generated from src/ via esbuild
 ├── style.css                   # Styles
 ├── package.json
 └── README.md
 ```
 
-> `index.js` is a committed build artifact so that GitHub Pages (which serves the repo root)
-> can load it directly. Do not edit it by hand — run `npm run build` instead.
+> The only build artifact, `index.js`, is generated from `src/` via esbuild
+> and is **not** checked into version control. GitHub Pages is published
+> automatically from `.github/workflows/deploy.yml` (which runs `npm run build`
+> and uploads `index.html` + `index.js` + `style.css` as a Pages artifact).
 
 ## Getting started
 
@@ -49,7 +50,9 @@ A few scripts are available:
 -   `npm run lint` / `npm run lint:fix` — ESLint 9 (flat config) + typescript-eslint + react + react-hooks, with style rules deferred to Prettier
 -   `npm run test` / `npm run test:run` — Vitest (unit tests for pure functions, `src/**/*.test.ts`)
 -   `npm run build` — type-check → lint → bundle `src/index.tsx` → `index.js`
--   `npm run deploy` — build and publish `index.html`, `index.js`, and `style.css` to the `gh-pages` branch
+
+Deployment is fully automated: every push to `main` triggers
+`.github/workflows/deploy.yml`, which builds and publishes to GitHub Pages.
 
 ## TypeScript
 
@@ -67,6 +70,11 @@ CI (`.github/workflows/ci.yml`) runs on every push and PR to `main`, executing:
 ```
 typecheck → lint → test → build
 ```
+
+A separate `.github/workflows/deploy.yml` builds and publishes to GitHub
+Pages on every push to `main` (via `actions/upload-pages-artifact` +
+`actions/deploy-pages`), so the `index.js` bundle never needs to live in
+version control.
 
 Locally, the `build` script enforces `typecheck` and `lint` before emitting
 `index.js`. Vitest covers the pure Markdown serialization layer

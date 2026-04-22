@@ -34,11 +34,3 @@ jobs:
 
             - name: Build
               run: npm run build
-
-            - name: Verify build artifact is up to date
-              run: |
-                  if ! git diff --quiet -- index.js; then
-                    echo "::error::index.js is out of date. Run 'npm run build' and commit the result."
-                    git diff -- index.js | head -80
-                    exit 1
-                  fi
