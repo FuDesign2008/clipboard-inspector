@@ -1,19 +1,62 @@
 import JSZip from 'jszip';
+import type { ClipboardEntry, FileInfo, ItemEntry, TypeEntry } from '../types';
 import {
 	sanitizeFilename,
 	getFileExtension,
 	fetchBlobFromObjectURL,
 	timestampForFilename,
 	triggerBrowserDownload
-} from './utils.js';
+} from './utils';
 
-function generateReadme(data, label) {
+type ZipContainer = JSZip;
+
+type ItemManifestEntry =
+	| {
+			index: number;
+			kind: string;
+			type: string;
+			filename: string;
+			hasContent?: boolean;
+			fileInfo?: { name: string; size: number; type: string };
+	  }
+	| {
+			index: number;
+			kind: string;
+			type: string;
+			error: string;
+			fileInfo: {
+				name: string;
+				size: number;
+				type: string;
+				url: string;
+			};
+	  };
+
+type FileManifestEntry =
+	| {
+			index: number;
+			filename: string;
+			originalName: string;
+			size: number;
+			type: string;
+	  }
+	| {
+			index: number;
+			error: string;
+			name: string;
+			size: number;
+			type: string;
+			url: string;
+	  };
+
+function generateReadme(data: ClipboardEntry[], label: string | undefined) {
 	const timestamp = new Date().toISOString();
 	return `Clipboard Data Export
 =====================
 
 Export Date: ${timestamp}
 Source: ${label || 'clipboard'}
+Entries: ${data.length}
 
 This archive contains clipboard content exported from the Clipboard Inspector tool.
 
@@ -33,15 +76,15 @@ For support inquiries, please send this entire ZIP file.
 `;
 }
 
-function generateMetadata(data, label) {
+function generateMetadata(data: ClipboardEntry[], label: string | undefined) {
 	const typesCount = data
-		.map(d => d.types?.length || 0)
+		.map(d => d.types?.length ?? 0)
 		.reduce((a, b) => a + b, 0);
 	const itemsCount = data
-		.map(d => d.items?.length || 0)
+		.map(d => ('items' in d && d.items ? d.items.length : 0))
 		.reduce((a, b) => a + b, 0);
 	const filesCount = data
-		.map(d => d.files?.length || 0)
+		.map(d => ('files' in d && d.files ? d.files.length : 0))
 		.reduce((a, b) => a + b, 0);
 
 	return {
@@ -57,43 +100,50 @@ function generateMetadata(data, label) {
 		entries: data.map((entry, index) => ({
 			index,
 			kind: entry.type,
-			typeCount: entry.types?.length || 0,
-			itemCount: entry.items?.length || 0,
-			fileCount: entry.files?.length || 0
+			typeCount: entry.types?.length ?? 0,
+			itemCount: 'items' in entry && entry.items ? entry.items.length : 0,
+			fileCount: 'files' in entry && entry.files ? entry.files.length : 0
 		})),
 		note: 'All clipboard content included: text data and binary files (images, PDFs, etc.)'
 	};
 }
 
-async function addTypesToZip(folder, typesData) {
+async function addTypesToZip(
+	folder: ZipContainer,
+	typesData: TypeEntry[] | undefined
+): Promise<void> {
 	if (!typesData || typesData.length === 0) return;
 	const typesFolder = folder.folder('types');
+	if (!typesFolder) return;
 
 	for (const obj of typesData) {
 		if (typeof obj.data === 'string') {
 			const filename = sanitizeFilename(obj.type) + '.txt';
 			typesFolder.file(filename, obj.data || '(Empty string)');
-		} else if (typeof obj.data === 'object' && obj.data !== null) {
-			if (obj.data.url) {
-				const blob = await fetchBlobFromObjectURL(obj.data.url);
-				if (blob) {
-					const ext = getFileExtension(obj.type);
-					const filename =
-						obj.data.name || `${sanitizeFilename(obj.type)}${ext}`;
-					typesFolder.file(filename, blob);
-				}
+		} else if (obj.data && obj.data.url) {
+			const blob = await fetchBlobFromObjectURL(obj.data.url);
+			if (blob) {
+				const ext = getFileExtension(obj.type);
+				const filename =
+					obj.data.name || `${sanitizeFilename(obj.type)}${ext}`;
+				typesFolder.file(filename, blob);
 			}
 		}
 	}
 }
 
-async function addItemsToZip(folder, itemsData) {
+async function addItemsToZip(
+	folder: ZipContainer,
+	itemsData: ItemEntry[] | null | undefined
+): Promise<void> {
 	if (!itemsData || itemsData.length === 0) return;
 	const itemsFolder = folder.folder('items');
-	const manifest = [];
+	if (!itemsFolder) return;
+	const manifest: ItemManifestEntry[] = [];
 
 	for (let index = 0; index < itemsData.length; index++) {
 		const item = itemsData[index];
+		if (!item) continue;
 
 		if (
 			item.kind === 'string' &&
@@ -114,7 +164,7 @@ async function addItemsToZip(folder, itemsData) {
 				hasContent: true
 			});
 		} else if (item.kind === 'file' && item.as_string_or_file) {
-			const fileInfo = item.as_string_or_file;
+			const fileInfo = item.as_string_or_file as FileInfo;
 			if (fileInfo.url) {
 				const blob = await fetchBlobFromObjectURL(fileInfo.url);
 				if (blob) {
@@ -159,11 +209,15 @@ async function addItemsToZip(folder, itemsData) {
 	}
 }
 
-async function addFilesToZip(folder, filesData) {
+async function addFilesToZip(
+	folder: ZipContainer,
+	filesData: (FileInfo | null)[] | null | undefined
+): Promise<void> {
 	if (!filesData || filesData.length === 0) return;
 	const filesFolder = folder.folder('files');
-	const manifest = [];
-	const usedFilenames = new Set();
+	if (!filesFolder) return;
+	const manifest: FileManifestEntry[] = [];
+	const usedFilenames = new Set<string>();
 
 	for (let index = 0; index < filesData.length; index++) {
 		const file = filesData[index];
@@ -171,19 +225,19 @@ async function addFilesToZip(folder, filesData) {
 
 		const blob = await fetchBlobFromObjectURL(file.url);
 		if (blob) {
-			let filename =
+			const base =
 				file.name || `file-${index}${getFileExtension(file.type)}`;
-			let finalFilename = filename;
+			let finalFilename = base;
 			let counter = 1;
 
 			while (usedFilenames.has(finalFilename)) {
-				const lastDot = filename.lastIndexOf('.');
+				const lastDot = base.lastIndexOf('.');
 				if (lastDot > 0) {
-					const name = filename.substring(0, lastDot);
-					const ext = filename.substring(lastDot);
+					const name = base.substring(0, lastDot);
+					const ext = base.substring(lastDot);
 					finalFilename = `${name}-${counter}${ext}`;
 				} else {
-					finalFilename = `${filename}-${counter}`;
+					finalFilename = `${base}-${counter}`;
 				}
 				counter++;
 			}
@@ -215,7 +269,10 @@ async function addFilesToZip(folder, filesData) {
 	}
 }
 
-export async function downloadAsZip(data, label) {
+export async function downloadAsZip(
+	data: ClipboardEntry[],
+	label: string | undefined
+): Promise<void> {
 	const zip = new JSZip();
 
 	zip.file('README.txt', generateReadme(data, label));
@@ -225,16 +282,17 @@ export async function downloadAsZip(data, label) {
 	);
 
 	for (let i = 0; i < data.length; i++) {
-		const item = data[i];
+		const entry = data[i];
+		if (!entry) continue;
 		const subFolder = zip.folder(`data-${i}`);
-		if (item.types) {
-			await addTypesToZip(subFolder, item.types);
+		if (!subFolder) continue;
+
+		await addTypesToZip(subFolder, entry.types);
+		if ('items' in entry) {
+			await addItemsToZip(subFolder, entry.items);
 		}
-		if (item.items) {
-			await addItemsToZip(subFolder, item.items);
-		}
-		if (item.files) {
-			await addFilesToZip(subFolder, item.files);
+		if ('files' in entry) {
+			await addFilesToZip(subFolder, entry.files);
 		}
 	}
 

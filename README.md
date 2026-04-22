@@ -15,15 +15,17 @@ A tool to help you explore the kinds of data available when you paste something 
 
 ```
 clipboard-inspector/
-├── src/                        # Source code (edit here)
-│   ├── index.jsx               # App entry point: render + event bindings
-│   ├── ClipboardInspector.jsx  # Main React component
-│   ├── extract-data.js         # Clipboard data extraction (DataTransfer / ClipboardItem)
-│   ├── mdn-urls.js             # MDN reference URLs used in the UI
+├── src/                        # TypeScript source (edit here)
+│   ├── index.tsx               # App entry point: render + event bindings
+│   ├── ClipboardInspector.tsx  # Main React component
+│   ├── extract-data.ts         # Clipboard data extraction (DataTransfer / ClipboardItem)
+│   ├── mdn-urls.ts             # MDN reference URLs used in the UI
+│   ├── types.ts                # Shared domain types (ClipboardEntry, FileInfo, ...)
 │   └── download/
-│       ├── utils.js            # Shared helpers (MIME, filenames, download trigger)
-│       ├── markdown.js         # Markdown export
-│       └── zip.js              # ZIP export (JSZip)
+│       ├── utils.ts            # Shared helpers (MIME, filenames, download trigger)
+│       ├── markdown.ts         # Markdown export
+│       └── zip.ts              # ZIP export (JSZip)
+├── tsconfig.json               # TypeScript config (strict, bundler-resolved)
 ├── index.html                  # GitHub Pages entry (loads ./index.js)
 ├── index.js                    # Build artifact, generated from src/ via esbuild
 ├── style.css                   # Styles
@@ -40,9 +42,19 @@ The project requires Node and npm to run locally. After cloning the repo, run `n
 
 A few scripts are available:
 
--   `npm run start` starts a local server on [127.0.0.1:8000](http://127.0.0.1:8000/)
--   `npm run build` bundles `src/index.jsx` into `index.js`
--   `npm run deploy` builds the project and pushes to the `gh-pages` Git branch, where GitHub Pages is set up to run
+-   `npm run start` — start a local dev server with esbuild (auto-rebuilds on save)
+-   `npm run typecheck` — run `tsc --noEmit` against the strict `tsconfig.json`
+-   `npm run build` — type-check, then bundle `src/index.tsx` → `index.js`
+-   `npm run deploy` — build and push to the `gh-pages` Git branch
+
+## TypeScript
+
+The project is written in strict TypeScript:
+
+-   `strict: true`, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`
+-   `moduleResolution: "bundler"` — pairs with esbuild, no `.ts` extensions in imports
+-   esbuild strips types at build time; `tsc --noEmit` enforces type correctness separately
+-   React 18 types are pinned to `@types/react@^18.3` / `@types/react-dom@^18.3` to match the runtime
 
 ## Exports
 

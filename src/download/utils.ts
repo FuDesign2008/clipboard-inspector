@@ -1,4 +1,4 @@
-export function sanitizeFilename(str) {
+export function sanitizeFilename(str: string | undefined | null): string {
 	if (!str) return 'unknown';
 	return str
 		.replace(/\//g, '-')
@@ -7,7 +7,7 @@ export function sanitizeFilename(str) {
 		.toLowerCase();
 }
 
-export function isTextMimeType(mimeType) {
+export function isTextMimeType(mimeType: string | undefined | null): boolean {
 	if (!mimeType) return false;
 	return (
 		mimeType.startsWith('text/') ||
@@ -20,7 +20,7 @@ export function isTextMimeType(mimeType) {
 	);
 }
 
-const MIME_TO_EXT = {
+const MIME_TO_EXT: Readonly<Record<string, string>> = {
 	'image/png': '.png',
 	'image/jpeg': '.jpg',
 	'image/jpg': '.jpg',
@@ -42,11 +42,17 @@ const MIME_TO_EXT = {
 	'application/javascript': '.js'
 };
 
-export function getFileExtension(mimeType, defaultExt = '.bin') {
-	return MIME_TO_EXT[mimeType] || defaultExt;
+export function getFileExtension(
+	mimeType: string | undefined | null,
+	defaultExt = '.bin'
+): string {
+	if (!mimeType) return defaultExt;
+	return MIME_TO_EXT[mimeType] ?? defaultExt;
 }
 
-export async function fetchBlobFromObjectURL(url) {
+export async function fetchBlobFromObjectURL(
+	url: string
+): Promise<Blob | null> {
 	try {
 		const response = await fetch(url);
 		if (!response.ok) {
@@ -54,13 +60,13 @@ export async function fetchBlobFromObjectURL(url) {
 			return null;
 		}
 		return await response.blob();
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error(`Error fetching blob from ${url}:`, error);
 		return null;
 	}
 }
 
-export function timestampForFilename(date = new Date()) {
+export function timestampForFilename(date: Date = new Date()): string {
 	return date
 		.toISOString()
 		.replace(/:/g, '')
@@ -68,11 +74,15 @@ export function timestampForFilename(date = new Date()) {
 		.replace('T', '_');
 }
 
-export function triggerBrowserDownload(blobOrString, filename, mimeType) {
+export function triggerBrowserDownload(
+	blobOrString: Blob | string,
+	filename: string,
+	mimeType?: string
+): void {
 	const blob =
 		typeof blobOrString === 'string'
 			? new Blob([blobOrString], {
-					type: mimeType || 'text/plain;charset=utf-8'
+					type: mimeType ?? 'text/plain;charset=utf-8'
 			  })
 			: blobOrString;
 	const a = document.createElement('a');
@@ -81,10 +91,12 @@ export function triggerBrowserDownload(blobOrString, filename, mimeType) {
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);
-	setTimeout(() => URL.revokeObjectURL(a.href), 0);
+	window.setTimeout(() => URL.revokeObjectURL(a.href), 0);
 }
 
-export function mimeToMarkdownLang(mimeType) {
+export function mimeToMarkdownLang(
+	mimeType: string | undefined | null
+): string {
 	if (!mimeType) return '';
 	if (mimeType === 'text/html' || mimeType === 'application/xhtml+xml')
 		return 'html';
