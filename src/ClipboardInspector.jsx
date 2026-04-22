@@ -1,99 +1,15 @@
-import React, { useCallback } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useCallback, useState } from 'react';
+import { MDN_BASE, MDN_URLS } from './mdn-urls.js';
+import { downloadAsZip } from './download/zip.js';
+import { downloadAsMarkdown } from './download/markdown.js';
 
-const MDN_BASE = `https://developer.mozilla.org/en-US/docs/Web/API`;
-
-const MDN_URLS = {
-	DataTransfer: {
-		ctr: {
-			url: 'DataTransfer',
-			label: label => `event.${label}`
-		},
-		getData: {
-			url: 'DataTransfer/getData',
-			label: 'getData(type)'
-		}
-	},
-	ClipboardItem: {
-		ctr: {
-			url: 'ClipboardItem',
-			label: () => 'ClipboardItem'
-		},
-		getData: {
-			url: 'ClipboardItem/getType',
-			label: 'getType(type)'
-		}
-	}
-};
-
-async function extractData(data) {
-	if (!data) {
-		return undefined;
-	}
-
-	const file_info = file =>
-		file
-			? {
-					name: file.name,
-					size: file.size,
-					type: file.type,
-					url: URL.createObjectURL(file)
-			  }
-			: null;
-
-	if (data instanceof DataTransfer) {
-		return {
-			type: 'DataTransfer',
-			types: Array.from(data.types).map(type => ({
-				type,
-				data: data.getData(type)
-			})),
-			items: data.items
-				? await Promise.all(
-						Array.from(data.items).map(async item => ({
-							kind: item.kind,
-							type: item.type,
-							as_string_or_file:
-								item.kind === 'string'
-									? await new Promise(r =>
-											item.getAsString(r)
-									  )
-									: file_info(item.getAsFile())
-						}))
-				  )
-				: null,
-			files: data.files ? Array.from(data.files).map(file_info) : null
-		};
-	}
-
-	if (data instanceof ClipboardItem) {
-		return {
-			type: 'ClipboardItem',
-			types: await Promise.all(
-				Array.from(data.types).map(async type => {
-					const blob = await data.getType(type);
-					return {
-						type: type,
-						data: blob.type.match(/(^text\/)|(image\/svg\+xml$)/)
-							? await blob.text()
-							: file_info(blob)
-					};
-				})
-			)
-		};
-	}
-	return undefined;
-}
-
-function ClipboardInspector(props) {
-	const { data, label } = props;
+export function ClipboardInspector(props) {
+	const { data, label, onReset, onPasteFromClipboard } = props;
 	const has_async_clipboard =
 		!navigator.clipboard || !navigator.clipboard.read;
-	const paste = useCallback(e => {
-		navigator.clipboard.read().then(data => {
-			render(data, 'ClipboardItems');
-		});
-	}, []);
+
+	const [zipState, setZipState] = useState('idle');
+	const [mdState, setMdState] = useState('idle');
 
 	const autoselect = useCallback(e => {
 		const range = document.createRange();
@@ -102,6 +18,32 @@ function ClipboardInspector(props) {
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}, []);
+
+	const handleDownloadZip = useCallback(async () => {
+		setZipState('loading');
+		try {
+			await downloadAsZip(data, label);
+			setZipState('success');
+			setTimeout(() => setZipState('idle'), 2000);
+		} catch (error) {
+			console.error('Failed to generate ZIP:', error);
+			alert('Failed to generate ZIP file. See console for details.');
+			setZipState('idle');
+		}
+	}, [data, label]);
+
+	const handleDownloadMarkdown = useCallback(() => {
+		setMdState('loading');
+		try {
+			downloadAsMarkdown(data, label);
+			setMdState('success');
+			setTimeout(() => setMdState('idle'), 2000);
+		} catch (error) {
+			console.error('Failed to generate Markdown:', error);
+			alert('Failed to generate Markdown file. See console for details.');
+			setMdState('idle');
+		}
+	}, [data, label]);
 
 	function render_file(file) {
 		return file ? (
@@ -153,7 +95,10 @@ function ClipboardInspector(props) {
 				<h2>To get started, either:</h2>
 				<ul>
 					<li>
-						<button disabled={has_async_clipboard} onClick={paste}>
+						<button
+							disabled={has_async_clipboard}
+							onClick={onPasteFromClipboard}
+						>
 							Paste using the Clipboard API
 						</button>{' '}
 						if your browser supports the Asynchronous Clipboard API
@@ -174,9 +119,37 @@ function ClipboardInspector(props) {
 
 	return (
 		<div>
-			<button type="button" onClick={e => render()}>
-				← Go back
-			</button>
+			<div className="action-buttons">
+				<button type="button" onClick={onReset}>
+					← Go back
+				</button>
+				<button
+					type="button"
+					onClick={handleDownloadMarkdown}
+					disabled={mdState === 'loading'}
+					className="download-button download-button--md"
+					title="Download as a single Markdown file, ready to paste into an AI chat"
+				>
+					{mdState === 'loading'
+						? 'Building Markdown...'
+						: mdState === 'success'
+						? 'Downloaded!'
+						: 'Download as Markdown'}
+				</button>
+				<button
+					type="button"
+					onClick={handleDownloadZip}
+					disabled={zipState === 'loading'}
+					className="download-button download-button--zip"
+					title="Download everything (text + binary files) as a ZIP archive"
+				>
+					{zipState === 'loading'
+						? 'Generating ZIP...'
+						: zipState === 'success'
+						? 'Downloaded!'
+						: 'Download as ZIP'}
+				</button>
+			</div>
 			{data.map((render_data, idx) => {
 				const URLS = MDN_URLS[render_data.type];
 				return (
@@ -230,7 +203,7 @@ function ClipboardInspector(props) {
 														navigator.clipboard &&
 														navigator.clipboard
 															.writeText && (
-															<div class="cb-copy">
+															<div className="cb-copy">
 																<button
 																	onClick={e =>
 																		navigator.clipboard.writeText(
@@ -245,7 +218,7 @@ function ClipboardInspector(props) {
 														)}
 												</td>
 												<td>
-													<pre class="cb-entry">
+													<pre className="cb-entry">
 														<code>
 															{typeof obj.data ===
 															'object'
@@ -326,7 +299,7 @@ function ClipboardInspector(props) {
 														<td>
 															{item.kind ===
 															'string' ? (
-																<pre class="cb-entry">
+																<pre className="cb-entry">
 																	<code>
 																		{item.as_string_or_file || (
 																			<em>
@@ -381,32 +354,3 @@ function ClipboardInspector(props) {
 		</div>
 	);
 }
-
-var app_el = document.getElementById('app');
-
-async function render(data, label) {
-	const extracted_data = data
-		? await Promise.all(
-				(Array.isArray(data) ? data : [data]).map(extractData)
-		  )
-		: [];
-	ReactDOM.render(
-		<ClipboardInspector data={extracted_data} label={label} />,
-		app_el
-	);
-}
-
-render();
-
-document.addEventListener('paste', e => {
-	render(e.clipboardData, 'clipboardData');
-});
-
-document.addEventListener('dragover', e => {
-	e.preventDefault();
-});
-
-document.addEventListener('drop', e => {
-	render(e.dataTransfer, 'dataTransfer');
-	e.preventDefault();
-});
