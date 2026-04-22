@@ -182,6 +182,45 @@ h1 + p {
 	padding: 0.5em 0.5em 0.5em 0;
 }
 
+.action-buttons {
+	display: flex;
+	gap: 0.75em;
+	margin-bottom: 1em;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.download-button {
+	font-weight: bold;
+}
+
+.download-button--md {
+	background: #0a84ff;
+	color: #fff;
+	border-color: #0060c7;
+}
+
+.download-button--md:active {
+	background: #0060c7;
+}
+
+.download-button--zip {
+	background: #00c853;
+	color: #fff;
+	border-color: #00a043;
+}
+
+.download-button--zip:active {
+	background: #00a043;
+}
+
+.download-button[disabled] {
+	background: #ccc;
+	color: #777;
+	border-color: #999;
+	cursor: not-allowed;
+}
+
 @media (max-width: 60ch) {
 	html {
 		font-size: 90%;
