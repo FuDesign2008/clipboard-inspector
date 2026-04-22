@@ -195,30 +195,16 @@ h1 + p {
 }
 
 .download-button--md {
-	background: #0a84ff;
-	color: #fff;
-	border-color: #0060c7;
-}
-
-.download-button--md:active {
-	background: #0060c7;
+	background: #cfe8ff;
 }
 
 .download-button--zip {
-	background: #00c853;
-	color: #fff;
-	border-color: #00a043;
-}
-
-.download-button--zip:active {
-	background: #00a043;
+	background: #c8f7da;
 }
 
 .download-button[disabled] {
-	background: #ccc;
-	color: #777;
-	border-color: #999;
-	cursor: not-allowed;
+	background: #e8e8e8;
+	color: #999;
 }
 
 @media (max-width: 60ch) {
