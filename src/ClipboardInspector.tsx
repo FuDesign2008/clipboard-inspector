@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MDN_BASE, MDN_URLS } from './mdn-urls';
 import { downloadAsZip } from './download/zip';
 import { downloadAsMarkdown } from './download/markdown';
@@ -15,6 +15,8 @@ export type ClipboardInspectorProps = {
 	onReset: () => void;
 	onPasteFromClipboard: () => void;
 };
+
+const SUCCESS_RESET_MS = 2000;
 
 export function ClipboardInspector({
 	data,
@@ -35,6 +37,22 @@ export function ClipboardInspector({
 	const [zipState, setZipState] = useState<DownloadState>('idle');
 	const [mdState, setMdState] = useState<DownloadState>('idle');
 
+	// Track pending success-reset timers so unmounting or a second click
+	// doesn't leak a timer or fire setState on an unmounted component.
+	const zipResetTimer = useRef<number | null>(null);
+	const mdResetTimer = useRef<number | null>(null);
+
+	useEffect(() => {
+		return () => {
+			if (zipResetTimer.current !== null) {
+				window.clearTimeout(zipResetTimer.current);
+			}
+			if (mdResetTimer.current !== null) {
+				window.clearTimeout(mdResetTimer.current);
+			}
+		};
+	}, []);
+
 	const autoselect = useCallback((e: React.FocusEvent<HTMLSpanElement>) => {
 		const range = document.createRange();
 		range.selectNodeContents(e.currentTarget);
@@ -44,31 +62,37 @@ export function ClipboardInspector({
 		selection.addRange(range);
 	}, []);
 
-	const handleDownloadZip = useCallback(async () => {
+	const handleDownloadZip = useCallback((): void => {
 		setZipState('loading');
-		try {
-			await downloadAsZip(data, label);
-			setZipState('success');
-			window.setTimeout(() => {
+		// Wrap async body in a self-invoked function so onClick sees a
+		// plain () => void handler (mirrors handleDownloadMarkdown below).
+		void (async () => {
+			try {
+				await downloadAsZip(data, label);
+				setZipState('success');
+				zipResetTimer.current = window.setTimeout(() => {
+					setZipState('idle');
+					zipResetTimer.current = null;
+				}, SUCCESS_RESET_MS);
+			} catch (error: unknown) {
+				console.error('Failed to generate ZIP:', error);
+				window.alert(
+					'Failed to generate ZIP file. See console for details.'
+				);
 				setZipState('idle');
-			}, 2000);
-		} catch (error: unknown) {
-			console.error('Failed to generate ZIP:', error);
-			window.alert(
-				'Failed to generate ZIP file. See console for details.'
-			);
-			setZipState('idle');
-		}
+			}
+		})();
 	}, [data, label]);
 
-	const handleDownloadMarkdown = useCallback(() => {
+	const handleDownloadMarkdown = useCallback((): void => {
 		setMdState('loading');
 		try {
 			downloadAsMarkdown(data, label);
 			setMdState('success');
-			window.setTimeout(() => {
+			mdResetTimer.current = window.setTimeout(() => {
 				setMdState('idle');
-			}, 2000);
+				mdResetTimer.current = null;
+			}, SUCCESS_RESET_MS);
 		} catch (error: unknown) {
 			console.error('Failed to generate Markdown:', error);
 			window.alert(
@@ -172,14 +196,12 @@ export function ClipboardInspector({
 					{mdState === 'loading'
 						? 'Building Markdown...'
 						: mdState === 'success'
-						? 'Downloaded!'
-						: 'Download as Markdown'}
+							? 'Downloaded!'
+							: 'Download as Markdown'}
 				</button>
 				<button
 					type="button"
-					onClick={() => {
-						void handleDownloadZip();
-					}}
+					onClick={handleDownloadZip}
 					disabled={zipState === 'loading'}
 					className="download-button download-button--zip"
 					title="Download everything (text + binary files) as a ZIP archive"
@@ -187,8 +209,8 @@ export function ClipboardInspector({
 					{zipState === 'loading'
 						? 'Generating ZIP...'
 						: zipState === 'success'
-						? 'Downloaded!'
-						: 'Download as ZIP'}
+							? 'Downloaded!'
+							: 'Download as ZIP'}
 				</button>
 			</div>
 			{data.map((render_data, idx) => {
