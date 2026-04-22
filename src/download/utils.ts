@@ -91,7 +91,9 @@ export function triggerBrowserDownload(
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);
-	window.setTimeout(() => URL.revokeObjectURL(a.href), 0);
+	window.setTimeout(() => {
+		URL.revokeObjectURL(a.href);
+	}, 0);
 }
 
 export function mimeToMarkdownLang(

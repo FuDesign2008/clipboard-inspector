@@ -19,15 +19,13 @@ export type ItemEntry = {
 export type DataTransferEntry = {
 	type: 'DataTransfer';
 	types: TypeEntry[];
-	items: ItemEntry[] | null;
-	files: (FileInfo | null)[] | null;
+	items: ItemEntry[];
+	files: (FileInfo | null)[];
 };
 
 export type ClipboardItemEntry = {
 	type: 'ClipboardItem';
 	types: TypeEntry[];
-	items?: undefined;
-	files?: undefined;
 };
 
 export type ClipboardEntry = DataTransferEntry | ClipboardItemEntry;

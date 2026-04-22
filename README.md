@@ -1,8 +1,10 @@
 # Clipboard Inspector
 
+[![CI](https://github.com/FuDesign2008/clipboard-inspector/actions/workflows/ci.yml/badge.svg)](https://github.com/FuDesign2008/clipboard-inspector/actions/workflows/ci.yml)
+
 A tool to help you explore the kinds of data available when you paste something on a web page, or drop something onto it:
 
-[https://evercoder.github.io/clipboard-inspector/](https://evercoder.github.io/clipboard-inspector/)
+[https://evercoder.github.io/clipboard-inspector/](https://evercoder.github.io/clipboard-inspector/) (upstream)
 
 ## Features
 
@@ -44,8 +46,10 @@ A few scripts are available:
 
 -   `npm run start` — start a local dev server with esbuild (auto-rebuilds on save)
 -   `npm run typecheck` — run `tsc --noEmit` against the strict `tsconfig.json`
--   `npm run build` — type-check, then bundle `src/index.tsx` → `index.js`
--   `npm run deploy` — build and push to the `gh-pages` Git branch
+-   `npm run lint` / `npm run lint:fix` — ESLint 9 (flat config) + typescript-eslint + react + react-hooks, with style rules deferred to Prettier
+-   `npm run test` / `npm run test:run` — Vitest (unit tests for pure functions, `src/**/*.test.ts`)
+-   `npm run build` — type-check → lint → bundle `src/index.tsx` → `index.js`
+-   `npm run deploy` — build and publish `index.html`, `index.js`, and `style.css` to the `gh-pages` branch
 
 ## TypeScript
 
@@ -55,6 +59,20 @@ The project is written in strict TypeScript:
 -   `moduleResolution: "bundler"` — pairs with esbuild, no `.ts` extensions in imports
 -   esbuild strips types at build time; `tsc --noEmit` enforces type correctness separately
 -   React 18 types are pinned to `@types/react@^18.3` / `@types/react-dom@^18.3` to match the runtime
+
+## Quality gates
+
+CI (`.github/workflows/ci.yml`) runs on every push and PR to `main`, executing:
+
+```
+typecheck → lint → test → build
+```
+
+Locally, the `build` script enforces `typecheck` and `lint` before emitting
+`index.js`. Vitest covers the pure Markdown serialization layer
+(`src/download/markdown.ts`, 13 specs including fence expansion, table
+escaping, and byte formatting). Component tests are intentionally out of
+scope for now — the UI is kept thin.
 
 ## Exports
 

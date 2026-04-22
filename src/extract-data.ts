@@ -24,26 +24,22 @@ export async function extractData(
 			data: data.getData(type)
 		}));
 
-		const items: ItemEntry[] | null = data.items
-			? await Promise.all(
-					Array.from(data.items).map<Promise<ItemEntry>>(
-						async item => ({
-							kind: item.kind,
-							type: item.type,
-							as_string_or_file:
-								item.kind === 'string'
-									? await new Promise<string>(resolve => {
-											item.getAsString(resolve);
-									  })
-									: file_info(item.getAsFile())
-						})
-					)
-			  )
-			: null;
+		const items: ItemEntry[] = await Promise.all(
+			Array.from(data.items).map<Promise<ItemEntry>>(async item => ({
+				kind: item.kind,
+				type: item.type,
+				as_string_or_file:
+					item.kind === 'string'
+						? await new Promise<string>(resolve => {
+								item.getAsString(resolve);
+						  })
+						: file_info(item.getAsFile())
+			}))
+		);
 
-		const files: (FileInfo | null)[] | null = data.files
-			? Array.from(data.files).map(f => file_info(f))
-			: null;
+		const files: (FileInfo | null)[] = Array.from(data.files).map(f =>
+			file_info(f)
+		);
 
 		return {
 			type: 'DataTransfer',
@@ -57,7 +53,7 @@ export async function extractData(
 		const types: TypeEntry[] = await Promise.all(
 			Array.from(data.types).map<Promise<TypeEntry>>(async type => {
 				const blob = await data.getType(type);
-				const isText = blob.type.match(/(^text\/)|(image\/svg\+xml$)/);
+				const isText = /(^text\/)|(image\/svg\+xml$)/.exec(blob.type);
 				return {
 					type,
 					data: isText ? await blob.text() : file_info(blob)

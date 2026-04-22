@@ -22,8 +22,15 @@ export function ClipboardInspector({
 	onReset,
 	onPasteFromClipboard
 }: ClipboardInspectorProps): React.ReactElement {
-	const has_async_clipboard =
-		!navigator.clipboard || !navigator.clipboard.read;
+	// Feature detection: `navigator.clipboard` and its members are unavailable in
+	// older browsers and non-secure contexts. TypeScript's DOM lib marks them as
+	// non-nullable, so narrow behind a single isolated expression that can hold
+	// an eslint-disable without getting split across lines by Prettier.
+	/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+	const has_async_clipboard = !navigator.clipboard?.read;
+	const has_clipboard_write =
+		typeof navigator.clipboard?.writeText === 'function';
+	/* eslint-enable @typescript-eslint/no-unnecessary-condition */
 
 	const [zipState, setZipState] = useState<DownloadState>('idle');
 	const [mdState, setMdState] = useState<DownloadState>('idle');
@@ -42,7 +49,9 @@ export function ClipboardInspector({
 		try {
 			await downloadAsZip(data, label);
 			setZipState('success');
-			window.setTimeout(() => setZipState('idle'), 2000);
+			window.setTimeout(() => {
+				setZipState('idle');
+			}, 2000);
 		} catch (error: unknown) {
 			console.error('Failed to generate ZIP:', error);
 			window.alert(
@@ -57,7 +66,9 @@ export function ClipboardInspector({
 		try {
 			downloadAsMarkdown(data, label);
 			setMdState('success');
-			window.setTimeout(() => setMdState('idle'), 2000);
+			window.setTimeout(() => {
+				setMdState('idle');
+			}, 2000);
 		} catch (error: unknown) {
 			console.error('Failed to generate Markdown:', error);
 			window.alert(
@@ -137,7 +148,7 @@ export function ClipboardInspector({
 						<span contentEditable onFocus={autoselect}>
 							paste in here
 						</span>{' '}
-						if you don't have a keyboard
+						if you don&apos;t have a keyboard
 					</li>
 					<li>Drop something on the page</li>
 				</ul>
@@ -166,7 +177,9 @@ export function ClipboardInspector({
 				</button>
 				<button
 					type="button"
-					onClick={handleDownloadZip}
+					onClick={() => {
+						void handleDownloadZip();
+					}}
 					disabled={zipState === 'loading'}
 					className="download-button download-button--zip"
 					title="Download everything (text + binary files) as a ZIP archive"
@@ -180,7 +193,6 @@ export function ClipboardInspector({
 			</div>
 			{data.map((render_data, idx) => {
 				const URLS = MDN_URLS[render_data.type];
-				if (!URLS) return null;
 				return (
 					<div className="clipboard-summary" key={idx}>
 						<h2>
@@ -193,7 +205,7 @@ export function ClipboardInspector({
 							contains:
 						</h2>
 
-						{render_data.types && (
+						{render_data.types.length > 0 && (
 							<div className="clipboard-section">
 								<h3>
 									<a
@@ -226,22 +238,20 @@ export function ClipboardInspector({
 											<tr key={tIdx}>
 												<td>
 													<code>{obj.type}</code>
-													{obj.type.match(
-														/^text\//
-													) &&
-														navigator.clipboard &&
-														navigator.clipboard
-															.writeText && (
+													{has_clipboard_write &&
+														/^text\//.exec(
+															obj.type
+														) && (
 															<div className="cb-copy">
 																<button
-																	onClick={() =>
-																		navigator.clipboard.writeText(
+																	onClick={() => {
+																		void navigator.clipboard.writeText(
 																			typeof obj.data ===
 																				'string'
 																				? obj.data
 																				: ''
-																		)
-																	}
+																		);
+																	}}
 																>
 																	Copy as
 																	plain text
@@ -265,7 +275,7 @@ export function ClipboardInspector({
 							</div>
 						)}
 
-						{'items' in render_data && render_data.items && (
+						{render_data.type === 'DataTransfer' && (
 							<div className="clipboard-section">
 								<h3>
 									<a
@@ -343,7 +353,7 @@ export function ClipboardInspector({
 							</div>
 						)}
 
-						{'files' in render_data && render_data.files && (
+						{render_data.type === 'DataTransfer' && (
 							<div className="clipboard-section">
 								<h3>
 									<a
