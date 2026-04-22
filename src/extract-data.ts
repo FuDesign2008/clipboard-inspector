@@ -32,7 +32,7 @@ export async function extractData(
 					item.kind === 'string'
 						? await new Promise<string>(resolve => {
 								item.getAsString(resolve);
-						  })
+							})
 						: file_info(item.getAsFile())
 			}))
 		);

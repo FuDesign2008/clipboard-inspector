@@ -8,10 +8,10 @@ A tool to help you explore the kinds of data available when you paste something 
 
 ## Features
 
--   Inspect clipboard contents from `paste`, drag-and-drop, and the Async Clipboard API
--   Preview text, images, and other binary payloads
--   **Download as Markdown** — a single `.md` file that is easy to paste into an AI assistant for diagnosis
--   **Download as ZIP** — a structured archive containing text, binary files, and manifests, suitable for bug reports and offline analysis
+- Inspect clipboard contents from `paste`, drag-and-drop, and the Async Clipboard API
+- Preview text, images, and other binary payloads
+- **Download as Markdown** — a single `.md` file that is easy to paste into an AI assistant for diagnosis
+- **Download as ZIP** — a structured archive containing text, binary files, and manifests, suitable for bug reports and offline analysis
 
 ## Project layout
 
@@ -45,11 +45,11 @@ The project requires Node and npm to run locally. After cloning the repo, run `n
 
 A few scripts are available:
 
--   `npm run start` — start a local dev server with esbuild (auto-rebuilds on save)
--   `npm run typecheck` — run `tsc --noEmit` against the strict `tsconfig.json`
--   `npm run lint` / `npm run lint:fix` — ESLint 9 (flat config) + typescript-eslint + react + react-hooks, with style rules deferred to Prettier
--   `npm run test` / `npm run test:run` — Vitest (unit tests for pure functions, `src/**/*.test.ts`)
--   `npm run build` — type-check → lint → bundle `src/index.tsx` → `index.js`
+- `npm run start` — start a local dev server with esbuild (auto-rebuilds on save)
+- `npm run typecheck` — run `tsc --noEmit` against the strict `tsconfig.json`
+- `npm run lint` / `npm run lint:fix` — ESLint 9 (flat config) + typescript-eslint + react + react-hooks, with style rules deferred to Prettier
+- `npm run test` / `npm run test:run` — Vitest (unit tests for pure functions, `src/**/*.test.ts`)
+- `npm run build` — type-check → lint → bundle `src/index.tsx` → `index.js`
 
 Deployment is fully automated: every push to `main` triggers
 `.github/workflows/deploy.yml`, which builds and publishes to GitHub Pages.
@@ -58,10 +58,10 @@ Deployment is fully automated: every push to `main` triggers
 
 The project is written in strict TypeScript:
 
--   `strict: true`, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`
--   `moduleResolution: "bundler"` — pairs with esbuild, no `.ts` extensions in imports
--   esbuild strips types at build time; `tsc --noEmit` enforces type correctness separately
--   React 18 types are pinned to `@types/react@^18.3` / `@types/react-dom@^18.3` to match the runtime
+- `strict: true`, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax`
+- `moduleResolution: "bundler"` — pairs with esbuild, no `.ts` extensions in imports
+- esbuild strips types at build time; `tsc --noEmit` enforces type correctness separately
+- React 18 types are pinned to `@types/react@^18.3` / `@types/react-dom@^18.3` to match the runtime
 
 ## Quality gates
 
@@ -88,11 +88,11 @@ scope for now — the UI is kept thin.
 
 A single `.md` file with:
 
--   Header (timestamp, source kind, counts)
--   One section per clipboard entry (`DataTransfer` / `ClipboardItem`)
--   Tables for `.types` / `.items` / `.files`
--   Text payloads rendered in fenced code blocks with a language hint inferred from the MIME type
--   Binary payloads described by `name`, `type`, and human-readable size
+- Header (timestamp, source kind, counts)
+- One section per clipboard entry (`DataTransfer` / `ClipboardItem`)
+- Tables for `.types` / `.items` / `.files`
+- Text payloads rendered in fenced code blocks with a language hint inferred from the MIME type
+- Binary payloads described by `name`, `type`, and human-readable size
 
 This format is designed to be pasted directly into a chat with an AI assistant.
 

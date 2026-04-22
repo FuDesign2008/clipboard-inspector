@@ -172,8 +172,8 @@ export function ClipboardInspector({
 					{mdState === 'loading'
 						? 'Building Markdown...'
 						: mdState === 'success'
-						? 'Downloaded!'
-						: 'Download as Markdown'}
+							? 'Downloaded!'
+							: 'Download as Markdown'}
 				</button>
 				<button
 					type="button"
@@ -187,8 +187,8 @@ export function ClipboardInspector({
 					{zipState === 'loading'
 						? 'Generating ZIP...'
 						: zipState === 'success'
-						? 'Downloaded!'
-						: 'Download as ZIP'}
+							? 'Downloaded!'
+							: 'Download as ZIP'}
 				</button>
 			</div>
 			{data.map((render_data, idx) => {

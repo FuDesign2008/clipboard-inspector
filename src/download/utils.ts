@@ -83,7 +83,7 @@ export function triggerBrowserDownload(
 		typeof blobOrString === 'string'
 			? new Blob([blobOrString], {
 					type: mimeType ?? 'text/plain;charset=utf-8'
-			  })
+				})
 			: blobOrString;
 	const a = document.createElement('a');
 	a.href = URL.createObjectURL(blob);
