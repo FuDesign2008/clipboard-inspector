@@ -1,2 +1,10 @@
 #!/bin/sh
-npx pretty-quick --staged
+set -e
+
+# Run lint-staged for incremental eslint + prettier on staged files.
+npx --no-install lint-staged
+
+# Run a full tsc --noEmit pass. Cheap for this project (<1s) and catches
+# type errors that lint-staged cannot see (e.g. a missing export in a
+# file that wasn't staged).
+npx --no-install tsc --noEmit

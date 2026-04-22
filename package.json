@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"license": "MIT",
 	"type": "module",
+	"engines": {
+		"node": ">=20"
+	},
 	"scripts": {
 		"prepare": "git config core.hooksPath .git-hooks",
 		"start": "esbuild src/index.tsx --outfile=index.js --bundle --servedir=.",
@@ -25,6 +28,7 @@
 		"eslint-plugin-react": "^7.37.4",
 		"eslint-plugin-react-hooks": "^5.1.0",
 		"globals": "^15.14.0",
+		"lint-staged": "^16.4.0",
 		"prettier": "^3.8.3",
 		"pretty-quick": "^4.2.2",
 		"typescript": "^5.9.0",
@@ -46,5 +50,14 @@
 		"bracketSameLine": false,
 		"arrowParens": "avoid",
 		"printWidth": 80
+	},
+	"lint-staged": {
+		"src/**/*.{ts,tsx}": [
+			"eslint --fix --no-warn-ignored",
+			"prettier --write"
+		],
+		"*.{js,mjs,cjs,json,md,yml,yaml,html,css}": [
+			"prettier --write --ignore-unknown"
+		]
 	}
 }
