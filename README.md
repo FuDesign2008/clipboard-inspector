@@ -4,7 +4,8 @@
 
 A tool to help you explore the kinds of data available when you paste something on a web page, or drop something onto it:
 
-[https://evercoder.github.io/clipboard-inspector/](https://evercoder.github.io/clipboard-inspector/) (upstream)
+- **This fork**: [https://fudesign2008.github.io/clipboard-inspector/](https://fudesign2008.github.io/clipboard-inspector/) — adds Markdown / ZIP export, strict TypeScript, CI + auto-deploy.
+- **Upstream**: [https://evercoder.github.io/clipboard-inspector/](https://evercoder.github.io/clipboard-inspector/)
 
 ## Features
 
