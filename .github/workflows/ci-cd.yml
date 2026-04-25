@@ -49,8 +49,8 @@ jobs:
                       index.js
                       style.css
                       landing-page.css
-                      PRIVACY-POLICY.md
-                      TERMS-OF-SERVICE.md
+                      PRIVACY-POLICY.html
+                      TERMS-OF-SERVICE.html
                       sitemap.xml
                       robots.txt
                   retention-days: 1
