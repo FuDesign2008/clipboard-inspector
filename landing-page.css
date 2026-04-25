@@ -1,56 +1,59 @@
-.landing-page {
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-}
-
 .landing-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 1rem 2rem;
-	border-bottom: 1px solid #e1e4e8;
-	max-width: 64rem;
-	margin: 0 auto;
+	padding: 1rem 0;
+	border-bottom: 1px solid #aaa;
+	margin-bottom: 2rem;
 }
 
 .landing-header__logo {
 	font-size: 1.2rem;
 	font-weight: bold;
 	text-decoration: none;
-	color: #24292e;
+	color: #000;
 }
 
 .landing-header__nav a {
 	margin-left: 1.5rem;
-	color: #586069;
+	color: #444;
 	text-decoration: none;
 	font-size: 0.9rem;
 }
 
 .landing-header__nav a:hover {
-	color: #0366d6;
+	color: #006be4;
 }
 
 .landing-hero {
 	text-align: center;
-	padding: 3rem 2rem 2rem;
-	max-width: 64rem;
-	margin: 0 auto;
+	padding: 2rem 0;
+	margin-bottom: 2rem;
 }
 
 .landing-hero__title {
 	font-size: 2.5rem;
 	font-weight: 800;
-	color: #24292e;
-	margin-bottom: 0.5rem;
+	color: #000;
+	margin-bottom: 1rem;
 	line-height: 1.2;
+	/* Override style.css h1 styling */
+	width: auto;
+	border: none;
+	padding: 0;
+	transform: none;
+	background: transparent;
+	box-shadow: none;
 }
 
 .landing-hero__subtitle {
 	font-size: 1.25rem;
-	color: #586069;
+	color: #444;
 	max-width: 50ch;
 	margin: 0 auto 1.5rem;
 	line-height: 1.5;
+	/* Override h1 + p selector from style.css */
+	font-size: 1.25rem;
 }
 
 .landing-hero__cta {
@@ -62,56 +65,51 @@
 }
 
 .landing-hero__cta a {
-	padding: 0.75rem 1.5rem;
-	border-radius: 6px;
+	padding: 0.5em 1em;
+	border: 0.1em solid;
 	text-decoration: none;
 	font-weight: 600;
 	font-size: 1rem;
+	background: #f3f3f3;
+	color: #000;
+	box-shadow: 0.1em 0.1em currentColor;
 }
 
 .landing-hero__cta .btn-primary {
-	background: #2ea44f;
-	color: white;
-	border: 1px solid rgba(27, 31, 35, 0.15);
+	background: #fe0;
 }
 
 .landing-hero__cta .btn-primary:hover {
-	background: #2c974b;
+	background: #f3f3f3;
 }
 
 .landing-hero__cta .btn-secondary {
-	background: #fafbfc;
-	color: #24292e;
-	border: 1px solid rgba(27, 31, 35, 0.15);
+	background: #f3f3f3;
 }
 
 .landing-hero__cta .btn-secondary:hover {
-	background: #f3f4f6;
+	background: #fe0;
 }
 
 .landing-hero__github {
 	margin-top: 1rem;
 	font-size: 0.9rem;
-	color: #586069;
+	color: #444;
 }
 
 .landing-app {
-	max-width: 64rem;
-	margin: 0 auto;
-	padding: 0 2rem;
+	margin: 2rem 0;
 }
 
 .landing-app__label {
 	font-size: 0.85rem;
-	color: #586069;
+	color: #444;
 	margin-bottom: 0.5rem;
 	text-align: center;
 }
 
 .landing-features {
-	max-width: 64rem;
-	margin: 3rem auto;
-	padding: 0 2rem;
+	margin: 3rem 0;
 }
 
 .landing-features__title {
@@ -119,7 +117,7 @@
 	font-weight: 600;
 	text-align: center;
 	margin-bottom: 2rem;
-	color: #24292e;
+	color: #000;
 }
 
 .landing-features__grid {
@@ -130,33 +128,31 @@
 
 .landing-feature {
 	padding: 1.5rem;
-	border: 1px solid #e1e4e8;
-	border-radius: 8px;
-	background: #fafbfc;
+	border: 1px solid #aaa;
+	background: #f3f3f3;
 }
 
 .landing-feature__icon {
 	font-size: 1.5rem;
 	margin-bottom: 0.5rem;
+	font-weight: bold;
 }
 
 .landing-feature__title {
 	font-size: 1.1rem;
 	font-weight: 600;
 	margin-bottom: 0.5rem;
-	color: #24292e;
+	color: #000;
 }
 
 .landing-feature__desc {
 	font-size: 0.9rem;
-	color: #586069;
+	color: #444;
 	line-height: 1.5;
 }
 
 .landing-how {
-	max-width: 64rem;
-	margin: 3rem auto;
-	padding: 0 2rem;
+	margin: 3rem 0;
 }
 
 .landing-how__title {
@@ -164,7 +160,7 @@
 	font-weight: 600;
 	text-align: center;
 	margin-bottom: 2rem;
-	color: #24292e;
+	color: #000;
 }
 
 .landing-how__steps {
@@ -183,19 +179,23 @@
 .landing-how__step-num {
 	font-size: 2rem;
 	font-weight: 800;
-	color: #2ea44f;
+	color: #000;
+	border: 0.1em solid;
+	display: inline-block;
+	padding: 0.2em 0.5em;
+	background: #fe0;
+	box-shadow: 0.1em 0.1em currentColor;
+	margin-bottom: 0.5rem;
 }
 
 .landing-how__step-text {
 	font-size: 0.9rem;
-	color: #586069;
+	color: #444;
 	margin-top: 0.5rem;
 }
 
 .landing-faq {
-	max-width: 64rem;
-	margin: 3rem auto;
-	padding: 0 2rem;
+	margin: 3rem 0;
 }
 
 .landing-faq__title {
@@ -203,38 +203,37 @@
 	font-weight: 600;
 	text-align: center;
 	margin-bottom: 2rem;
-	color: #24292e;
+	color: #000;
 }
 
 .landing-faq__item {
-	border-bottom: 1px solid #e1e4e8;
+	border-bottom: 1px solid #aaa;
 	padding: 1rem 0;
 }
 
 .landing-faq__question {
 	font-weight: 600;
-	color: #24292e;
+	color: #000;
 	margin-bottom: 0.5rem;
 }
 
 .landing-faq__answer {
-	color: #586069;
+	color: #444;
 	font-size: 0.9rem;
 	line-height: 1.5;
 }
 
 .landing-footer {
-	max-width: 64rem;
-	margin: 3rem auto 0;
-	padding: 2rem;
-	border-top: 1px solid #e1e4e8;
+	margin-top: 3rem;
+	padding: 2rem 0;
+	border-top: 1px solid #aaa;
 	text-align: center;
-	color: #586069;
+	color: #444;
 	font-size: 0.85rem;
 }
 
 .landing-footer a {
-	color: #0366d6;
+	color: #006be4;
 	text-decoration: none;
 }
 
@@ -250,18 +249,23 @@
 	.landing-hero__title {
 		font-size: 1.75rem;
 	}
-	
+
 	.landing-hero__subtitle {
 		font-size: 1rem;
 	}
-	
+
 	.landing-features__grid {
 		grid-template-columns: 1fr;
 	}
-	
+
 	.landing-header {
-		padding: 1rem;
+		padding: 1rem 0;
 		flex-direction: column;
 		gap: 0.5rem;
+		text-align: center;
+	}
+
+	.landing-header__nav a {
+		margin: 0 0.75rem;
 	}
 }
