@@ -1,0 +1,65 @@
+name: Bug Report
+description: Report a problem or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug!
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug
+      placeholder: When I paste an image, the preview doesn't show...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Copy an image from Photoshop
+        2. Open Clipboard Inspector
+        3. Paste (Ctrl+V)
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Browser and version
+      placeholder: Chrome 124, Firefox 125, Safari 17
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: OS and version
+      placeholder: macOS 14, Windows 11, Ubuntu 22.04
+  - type: textarea
+    id: data
+    attributes:
+      label: Clipboard Data (if possible)
+      description: |
+        If you can share, paste the Markdown export or describe what kind of data was on the clipboard
+      placeholder: text/html, image/png, etc.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Privacy Policy](../PRIVACY-POLICY.md)
+      options:
+        - label: I agree
+          required: true
