@@ -48,6 +48,11 @@ jobs:
                       index.html
                       index.js
                       style.css
+                      landing-page.css
+                      PRIVACY-POLICY.md
+                      TERMS-OF-SERVICE.md
+                      sitemap.xml
+                      robots.txt
                   retention-days: 1
 
     deploy:

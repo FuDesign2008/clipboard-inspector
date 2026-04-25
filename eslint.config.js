@@ -12,7 +12,7 @@ import globals from 'globals';
 
 export default tseslint.config(
 	{
-		ignores: ['node_modules/**', 'index.js', '**/*.d.ts', '.git-hooks/**']
+		ignores: ['node_modules/**', 'index.js', '**/*.d.ts', '.git-hooks/**', 'extension/**', 'strategy/**']
 	},
 	js.configs.recommended,
 	{
