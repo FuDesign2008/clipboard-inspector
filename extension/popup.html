@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 400px;
+      min-height: 300px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    .header h1 {
+      font-size: 16px;
+      margin: 0;
+      color: #24292e;
+    }
+    .read-btn {
+      width: 100%;
+      padding: 10px;
+      background: #2ea44f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .read-btn:hover {
+      background: #2c974b;
+    }
+    .read-btn:disabled {
+      background: #94d3a2;
+      cursor: not-allowed;
+    }
+    .results {
+      display: none;
+    }
+    .results.active {
+      display: block;
+    }
+    .item {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #f6f8fa;
+      border-radius: 6px;
+      border: 1px solid #e1e4e8;
+    }
+    .item-type {
+      font-weight: 600;
+      color: #0366d6;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .item-preview {
+      color: #24292e;
+      word-break: break-all;
+      max-height: 100px;
+      overflow: auto;
+    }
+    .item-size {
+      font-size: 11px;
+      color: #586069;
+      margin-top: 4px;
+    }
+    .empty {
+      text-align: center;
+      color: #586069;
+      padding: 20px;
+    }
+    .error {
+      color: #d73a49;
+      padding: 10px;
+      background: #ffeef0;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .footer {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e1e4e8;
+      text-align: center;
+      font-size: 11px;
+      color: #586069;
+    }
+    .footer a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Clipboard Inspector</h1>
+  </div>
+
+  <button class="read-btn" id="readBtn">Read Clipboard</button>
+
+  <div id="error" class="error" style="display: none;"></div>
+
+  <div id="results" class="results">
+    <div id="items"></div>
+  </div>
+
+  <div id="empty" class="empty" style="display: none;">
+    No clipboard data found. Try copying something first.
+  </div>
+
+  <div class="footer">
+    <a href="https://fudesign2008.github.io/clipboard-inspector/" target="_blank">Open Web Version</a>
+    |
+    <a href="https://github.com/FuDesign2008/clipboard-inspector" target="_blank">GitHub</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
