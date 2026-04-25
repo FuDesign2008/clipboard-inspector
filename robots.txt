@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fudesign2008.github.io/clipboard-inspector/sitemap.xml
