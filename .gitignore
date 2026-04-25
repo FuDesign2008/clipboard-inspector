@@ -69,3 +69,6 @@ index.js
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# mdBook build output
+strategy/book/

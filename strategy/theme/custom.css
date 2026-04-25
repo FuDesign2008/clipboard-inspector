@@ -1,0 +1,90 @@
+/* Custom styles for Clipboard Inspector Strategy Book */
+
+/* Better CJK typography */
+body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    line-height: 1.8;
+}
+
+/* Chapter title styling */
+h1 {
+    border-bottom: 3px solid #4A90D9;
+    padding-bottom: 0.3em;
+}
+
+/* Data tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+table th {
+    background-color: #2D3748;
+    color: white;
+    padding: 0.6em 1em;
+    text-align: left;
+}
+
+table td {
+    padding: 0.5em 1em;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+table tr:nth-child(even) {
+    background-color: #F7FAFC;
+}
+
+/* Priority badges */
+.priority-critical {
+    color: #E53E3E;
+    font-weight: bold;
+}
+
+.priority-high {
+    color: #DD6B20;
+    font-weight: bold;
+}
+
+.priority-medium {
+    color: #D69E2E;
+    font-weight: bold;
+}
+
+.priority-low {
+    color: #38A169;
+}
+
+/* Quote blocks for user feedback */
+blockquote {
+    border-left: 4px solid #4A90D9;
+    background-color: #EBF8FF;
+    padding: 0.8em 1.2em;
+    margin: 1em 0;
+    font-style: italic;
+}
+
+blockquote cite {
+    display: block;
+    text-align: right;
+    font-size: 0.9em;
+    color: #718096;
+    margin-top: 0.5em;
+}
+
+/* Metric highlights */
+.metric {
+    background-color: #EBF8FF;
+    border: 1px solid #BEE3F8;
+    border-radius: 4px;
+    padding: 0.5em 1em;
+    display: inline-block;
+    font-weight: bold;
+    color: #2B6CB0;
+}
+
+/* Diagram container */
+.mermaid {
+    text-align: center;
+    margin: 1.5em 0;
+}

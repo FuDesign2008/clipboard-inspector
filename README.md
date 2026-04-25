@@ -1,6 +1,6 @@
 # Clipboard Inspector
 
-[![CI](https://github.com/FuDesign2008/clipboard-inspector/actions/workflows/ci.yml/badge.svg)](https://github.com/FuDesign2008/clipboard-inspector/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/FuDesign2008/clipboard-inspector/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/FuDesign2008/clipboard-inspector/actions/workflows/ci-cd.yml)
 
 A tool to help you explore the kinds of data available when you paste something on a web page, or drop something onto it:
 
@@ -37,7 +37,7 @@ clipboard-inspector/
 
 > The only build artifact, `index.js`, is generated from `src/` via esbuild
 > and is **not** checked into version control. GitHub Pages is published
-> automatically from `.github/workflows/deploy.yml` (which runs `npm run build`
+> automatically from `.github/workflows/ci-cd.yml` (which runs `npm run build`
 > and uploads `index.html` + `index.js` + `style.css` as a Pages artifact).
 
 ## Getting started
@@ -53,7 +53,7 @@ A few scripts are available:
 - `npm run build` — type-check → lint → bundle `src/index.tsx` → `index.js`
 
 Deployment is fully automated: every push to `main` triggers
-`.github/workflows/deploy.yml`, which builds and publishes to GitHub Pages.
+`.github/workflows/ci-cd.yml`, which builds and publishes to GitHub Pages.
 
 ## TypeScript
 
@@ -66,13 +66,13 @@ The project is written in strict TypeScript:
 
 ## Quality gates
 
-CI (`.github/workflows/ci.yml`) runs on every push and PR to `main`, executing:
+CI/CD (`.github/workflows/ci-cd.yml`) runs on every push and PR to `main`, executing:
 
 ```
 typecheck → lint → test → build
 ```
 
-A separate `.github/workflows/deploy.yml` builds and publishes to GitHub
+The deploy job in `.github/workflows/ci-cd.yml` builds and publishes to GitHub
 Pages on every push to `main` (via `actions/upload-pages-artifact` +
 `actions/deploy-pages`), so the `index.js` bundle never needs to live in
 version control.
