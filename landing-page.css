@@ -245,6 +245,21 @@
 	margin: 0 0.75rem;
 }
 
+#lang-toggle {
+	background: #f3f3f3;
+	border: 0.1em solid #aaa;
+	color: #444;
+	cursor: pointer;
+	font-size: 0.9rem;
+	padding: 0.2em 0.6em;
+	margin-left: 1.5rem;
+}
+
+#lang-toggle:hover {
+	background: #fe0;
+	color: #000;
+}
+
 @media (max-width: 60ch) {
 	.landing-hero__title {
 		font-size: 1.75rem;

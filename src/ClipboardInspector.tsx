@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MDN_BASE, MDN_URLS } from './mdn-urls';
 import { downloadAsZip } from './download/zip';
 import { downloadAsMarkdown } from './download/markdown';
+import { useTranslation } from './i18n/useTranslation';
 import type {
 	ClipboardEntry,
 	DownloadState,
@@ -33,6 +34,7 @@ export function ClipboardInspector({
 	const has_clipboard_write =
 		typeof navigator.clipboard?.writeText === 'function';
 	/* eslint-enable @typescript-eslint/no-unnecessary-condition */
+	const { t } = useTranslation();
 
 	const [zipState, setZipState] = useState<DownloadState>('idle');
 	const [mdState, setMdState] = useState<DownloadState>('idle');
@@ -76,13 +78,11 @@ export function ClipboardInspector({
 				}, SUCCESS_RESET_MS);
 			} catch (error: unknown) {
 				console.error('Failed to generate ZIP:', error);
-				window.alert(
-					'Failed to generate ZIP file. See console for details.'
-				);
+				window.alert(t('app.zipError'));
 				setZipState('idle');
 			}
 		})();
-	}, [data, label]);
+	}, [data, label, t]);
 
 	const handleDownloadMarkdown = useCallback((): void => {
 		setMdState('loading');
@@ -95,22 +95,20 @@ export function ClipboardInspector({
 			}, SUCCESS_RESET_MS);
 		} catch (error: unknown) {
 			console.error('Failed to generate Markdown:', error);
-			window.alert(
-				'Failed to generate Markdown file. See console for details.'
-			);
+			window.alert(t('app.mdError'));
 			setMdState('idle');
 		}
-	}, [data, label]);
+	}, [data, label, t]);
 
 	function render_file(file: FileInfo | null): React.ReactNode {
-		if (!file) return <em>N/A</em>;
+		if (!file) return <em>{t('app.notAvailable')}</em>;
 		return (
 			<table>
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Size</th>
-						<th>Type</th>
+						<th>{t('app.colName')}</th>
+						<th>{t('app.colSize')}</th>
+						<th>{t('app.colType')}</th>
 						<th>
 							<a
 								className="mdn"
@@ -147,7 +145,7 @@ export function ClipboardInspector({
 
 	function render_type_cell(obj: TypeEntry): React.ReactNode {
 		if (typeof obj.data === 'string') {
-			return obj.data || <em>Empty string</em>;
+			return obj.data || <em>{t('app.emptyString')}</em>;
 		}
 		return render_file(obj.data);
 	}
@@ -155,26 +153,26 @@ export function ClipboardInspector({
 	if (!data.length) {
 		return (
 			<div className="intro-msg">
-				<h2>To get started, either:</h2>
+				<h2>{t('app.introTitle')}</h2>
 				<ul>
 					<li>
 						<button
 							disabled={has_async_clipboard}
 							onClick={onPasteFromClipboard}
 						>
-							Paste using the Clipboard API
+							{t('app.pasteClipboard')}
 						</button>{' '}
-						if your browser supports the Asynchronous Clipboard API
+						{t('app.clipboardApiNote')}
 					</li>
 					<li>
-						Paste with the <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd>{' '}
-						keyboard shortcut or{' '}
+						{t('app.pasteWith')} <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd>{' '}
+						{t('app.keyboardOr')}{' '}
 						<span contentEditable onFocus={autoselect}>
-							paste in here
+							{t('app.pasteInHere')}
 						</span>{' '}
-						if you don&apos;t have a keyboard
+						{t('app.noKeyboard')}
 					</li>
-					<li>Drop something on the page</li>
+					<li>{t('app.dropSomething')}</li>
 				</ul>
 			</div>
 		);
@@ -184,33 +182,33 @@ export function ClipboardInspector({
 		<div>
 			<div className="action-buttons">
 				<button type="button" onClick={onReset}>
-					← Go back
+					{t('app.goBack')}
 				</button>
 				<button
 					type="button"
 					onClick={handleDownloadMarkdown}
 					disabled={mdState === 'loading'}
 					className="download-button download-button--md"
-					title="Download as a single Markdown file, ready to paste into an AI chat"
+					title={t('app.downloadMdTitle')}
 				>
 					{mdState === 'loading'
-						? 'Building Markdown...'
+						? t('app.buildingMd')
 						: mdState === 'success'
-							? 'Downloaded!'
-							: 'Download as Markdown'}
+							? t('app.downloaded')
+							: t('app.downloadMd')}
 				</button>
 				<button
 					type="button"
 					onClick={handleDownloadZip}
 					disabled={zipState === 'loading'}
 					className="download-button download-button--zip"
-					title="Download everything (text + binary files) as a ZIP archive"
+					title={t('app.downloadZipTitle')}
 				>
 					{zipState === 'loading'
-						? 'Generating ZIP...'
+						? t('app.generatingZip')
 						: zipState === 'success'
-							? 'Downloaded!'
-							: 'Download as ZIP'}
+							? t('app.downloaded')
+							: t('app.downloadZip')}
 				</button>
 			</div>
 			{data.map((render_data, idx) => {
@@ -224,7 +222,7 @@ export function ClipboardInspector({
 							>
 								{URLS.ctr.label(label)}
 							</a>{' '}
-							contains:
+							{t('app.contains')}
 						</h2>
 
 						{render_data.types.length > 0 && (
@@ -237,8 +235,9 @@ export function ClipboardInspector({
 										.types
 									</a>
 									<span className="anno">
-										{render_data.types.length} type(s)
-										available
+										{t('app.typesCount', {
+											count: render_data.types.length
+										})}
 									</span>
 								</h3>
 								<table>
@@ -275,8 +274,9 @@ export function ClipboardInspector({
 																		);
 																	}}
 																>
-																	Copy as
-																	plain text
+																	{t(
+																		'app.copyAsText'
+																	)}
 																</button>
 															</div>
 														)}
@@ -307,7 +307,9 @@ export function ClipboardInspector({
 										.items
 									</a>
 									<span className="anno">
-										{`${render_data.items.length} item(s) available`}
+										{t('app.itemsCount', {
+											count: render_data.items.length
+										})}
 									</span>
 								</h3>
 
@@ -350,12 +352,17 @@ export function ClipboardInspector({
 																'string' ? (
 																	item.as_string_or_file || (
 																		<em>
-																			Empty
-																			string
+																			{t(
+																				'app.emptyString'
+																			)}
 																		</em>
 																	)
 																) : (
-																	<em>N/A</em>
+																	<em>
+																		{t(
+																			'app.notAvailable'
+																		)}
+																	</em>
 																)}
 															</code>
 														</pre>
@@ -385,7 +392,9 @@ export function ClipboardInspector({
 										.files
 									</a>
 									<span className="anno">
-										{`${render_data.files.length} file(s) available`}
+										{t('app.filesCount', {
+											count: render_data.files.length
+										})}
 									</span>
 								</h3>
 								{render_data.files.map((file, fIdx) => (
