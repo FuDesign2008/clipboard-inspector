@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { MDN_BASE, MDN_URLS } from './mdn-urls';
 import { downloadAsZip } from './download/zip';
 import { downloadAsMarkdown } from './download/markdown';
+import { downloadAsHtml } from './download/html';
 import { useTranslation } from './i18n/useTranslation';
 import type {
 	ClipboardEntry,
@@ -38,11 +39,13 @@ export function ClipboardInspector({
 
 	const [zipState, setZipState] = useState<DownloadState>('idle');
 	const [mdState, setMdState] = useState<DownloadState>('idle');
+	const [htmlState, setHtmlState] = useState<DownloadState>('idle');
 
 	// Track pending success-reset timers so unmounting or a second click
 	// doesn't leak a timer or fire setState on an unmounted component.
 	const zipResetTimer = useRef<number | null>(null);
 	const mdResetTimer = useRef<number | null>(null);
+	const htmlResetTimer = useRef<number | null>(null);
 
 	useEffect(() => {
 		return () => {
@@ -51,6 +54,9 @@ export function ClipboardInspector({
 			}
 			if (mdResetTimer.current !== null) {
 				window.clearTimeout(mdResetTimer.current);
+			}
+			if (htmlResetTimer.current !== null) {
+				window.clearTimeout(htmlResetTimer.current);
 			}
 		};
 	}, []);
@@ -98,6 +104,24 @@ export function ClipboardInspector({
 			window.alert(t('app.mdError'));
 			setMdState('idle');
 		}
+	}, [data, label, t]);
+
+	const handleDownloadHtml = useCallback((): void => {
+		setHtmlState('loading');
+		void (async () => {
+			try {
+				await downloadAsHtml(data, label);
+				setHtmlState('success');
+				htmlResetTimer.current = window.setTimeout(() => {
+					setHtmlState('idle');
+					htmlResetTimer.current = null;
+				}, SUCCESS_RESET_MS);
+			} catch (error: unknown) {
+				console.error('Failed to generate HTML:', error);
+				window.alert(t('app.htmlError'));
+				setHtmlState('idle');
+			}
+		})();
 	}, [data, label, t]);
 
 	function render_file(file: FileInfo | null): React.ReactNode {
@@ -192,7 +216,7 @@ export function ClipboardInspector({
 					title={t('app.downloadMdTitle')}
 				>
 					{mdState === 'loading'
-						? t('app.buildingMd')
+						? t('app.generatingMd')
 						: mdState === 'success'
 							? t('app.downloaded')
 							: t('app.downloadMd')}
@@ -209,6 +233,19 @@ export function ClipboardInspector({
 						: zipState === 'success'
 							? t('app.downloaded')
 							: t('app.downloadZip')}
+				</button>
+				<button
+					type="button"
+					onClick={handleDownloadHtml}
+					disabled={htmlState === 'loading'}
+					className="download-button download-button--html"
+					title={t('app.downloadHtmlTitle')}
+				>
+					{htmlState === 'loading'
+						? t('app.generatingHtml')
+						: htmlState === 'success'
+							? t('app.downloaded')
+							: t('app.downloadHtml')}
 				</button>
 			</div>
 			{data.map((render_data, idx) => {
