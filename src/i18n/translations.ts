@@ -12,15 +12,20 @@ const en: Record<string, string> = {
 	'app.dropSomething': 'Drop something on the page',
 
 	'app.goBack': '← Go back',
-	'app.downloadMd': 'Download as Markdown',
-	'app.buildingMd': 'Building Markdown...',
+	'app.downloadMd': 'Download for AI Chat (.md)',
+	'app.generatingMd': 'Generating...',
 	'app.downloaded': 'Downloaded!',
 	'app.downloadMdTitle':
 		'Download as a single Markdown file, ready to paste into an AI chat',
-	'app.downloadZip': 'Download as ZIP',
-	'app.generatingZip': 'Generating ZIP...',
+	'app.downloadZip': 'Download Full Archive (.zip)',
+	'app.generatingZip': 'Generating...',
 	'app.downloadZipTitle':
 		'Download everything (text + binary files) as a ZIP archive',
+	'app.downloadHtml': 'Download Replayable File (.html)',
+	'app.generatingHtml': 'Generating...',
+	'app.downloadHtmlTitle':
+		"Download as a standalone HTML file — open it and click 'Set Clipboard' to restore all clipboard data",
+	'app.htmlError': 'Failed to generate HTML file. See console for details.',
 
 	'app.contains': 'contains:',
 	'app.typesCount': '{count} type(s) available',
@@ -49,13 +54,18 @@ const zh: Record<string, string> = {
 	'app.dropSomething': '将内容拖放到页面上',
 
 	'app.goBack': '← 返回',
-	'app.downloadMd': '下载为 Markdown',
-	'app.buildingMd': '正在生成 Markdown...',
+	'app.downloadMd': '下载为 AI 对话 (.md)',
+	'app.generatingMd': '正在生成...',
 	'app.downloaded': '已下载！',
 	'app.downloadMdTitle': '下载为单个 Markdown 文件，可直接粘贴到 AI 对话中',
-	'app.downloadZip': '下载为 ZIP',
-	'app.generatingZip': '正在生成 ZIP...',
+	'app.downloadZip': '下载完整归档 (.zip)',
+	'app.generatingZip': '正在生成...',
 	'app.downloadZipTitle': '将所有内容（文本 + 二进制文件）下载为 ZIP 压缩包',
+	'app.downloadHtml': '下载可重放文件 (.html)',
+	'app.generatingHtml': '正在生成...',
+	'app.downloadHtmlTitle':
+		"下载为独立 HTML 文件 — 打开后点击 'Set Clipboard' 即可还原剪贴板数据",
+	'app.htmlError': '生成 HTML 文件失败，详情请查看控制台。',
 
 	'app.contains': '包含：',
 	'app.typesCount': '{count} 个可用类型',
